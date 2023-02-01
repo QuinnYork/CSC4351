@@ -41,24 +41,47 @@ Yylex(java.io.InputStream s, ErrorMsg e) {
 %eofval{
 	{
 	 return tok(sym.EOF, null);
-        }
+  }
 %eofval}    
 
 %state STRING
-%state IDENT
+%state COMMENT
 
 ALPHA=[A-Za-z]
 DIGIT=[0-9]
-WHITE_SPACE=[\n\t]
+WHITE_SPACE=[\n\t\f\b\r\v]
 
 %%
 <YYINITIAL> " "	{}
-<YYINITIAL> \n	{newline();}
+<YYINITIAL> \n {newline();}
 <YYINITIAL> ","	{return tok(sym.COMMA, null);}
-<YYINITIAL> . { err("Illegal character: " + yytext()); }
+<YYINITIAL> ":"	{return tok(sym.COLON, null);}
+<YYINITIAL> ";"	{return tok(sym.SEMICOLON, null);}
+<YYINITIAL> "("	{return tok(sym.LPAREN, null);}
+<YYINITIAL> ")"	{return tok(sym.RPAREN, null);}
+<YYINITIAL> "["	{return tok(sym.LBRACE, null);}
+<YYINITIAL> "]"	{return tok(sym.RBRACE, null);}
+<YYINITIAL> "{"	{return tok(sym.LBRACK, null);}
+<YYINITIAL> "}"	{return tok(sym.RBRACK, null);}
+<YYINITIAL> "."	{return tok(sym.DOT, null);}
+<YYINITIAL> "+"	{return tok(sym.PLUS, null);}
+<YYINITIAL> "-"	{return tok(sym.MINUS, null);}
+<YYINITIAL> "*"	{return tok(sym.TIMES, null);}
+<YYINITIAL> "/"	{return tok(sym.DIVIDE, null);}
+<YYINITIAL> "="	{return tok(sym.EQ, null);}
+<YYINITIAL> "<>"	{return tok(sym.NEQ, null);}
+<YYINITIAL> "<"	{return tok(sym.LT, null);}
+<YYINITIAL> "<="	{return tok(sym.LE, null);}
+<YYINITIAL> ">"	{return tok(sym.GT, null);}
+<YYINITIAL> ">="	{return tok(sym.GE, null);}
+<YYINITIAL> "&"	{return tok(sym.AND, null);}
+<YYINITIAL> "|"	{return tok(sym.OR, null);}
+<YYINITIAL> ":="	{return tok(sym.ASSIGN, null);}
+
 <YYINITIAL> "\"" { 
     yybegin(STRING); 
     String str = ""; }
+
 <STRING> {ALPHA} { str += yytext(); }
 <STRING> "\"" { 
     yybegin(YYINITIAL); 
@@ -71,7 +94,7 @@ WHITE_SPACE=[\n\t]
 <YYINITIAL> {DIGIT}+ {
     return tok(sym.INT, yytext()); }
 
-// this will lead into an identifier. I have to create a bigger range
-// of chars than just the alphabet since identifiers have special
-// reqs
-<YYINITIAL> {ALPHA} 
+<YYINITIAL> {ALPHA}({ALPHA}|{DIGIT}|_)* {
+    return tok(sym.ID, yytext()); }
+
+<YYINITIAL> . { err("Illegal character: " + yytext()); }
