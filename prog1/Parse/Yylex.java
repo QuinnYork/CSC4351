@@ -28,13 +28,12 @@ private java_cup.runtime.Symbol tok(int kind, Object value) {
     return new java_cup.runtime.Symbol(kind, yychar, yychar+yylength(), value);
 }
 private ErrorMsg errorMsg;
+private StringBuffer str;
+private int depth;
 Yylex(java.io.InputStream s, ErrorMsg e) {
   this(s);
   errorMsg=e;
 }
-private StringBuffer str;
-private int depth;
-private char ascii;
 	private java.io.BufferedReader yy_reader;
 	private int yy_buffer_index;
 	private int yy_buffer_read;
@@ -75,8 +74,10 @@ private char ascii;
 		if (false == yy_eof_done) {
 
   {
+    String[] arr = new String[4];
+    arr[0] = "YYINITIAL"; arr[1] = "STRING"; arr[2] = "COMMENT"; arr[3] = "IGNORE";
     if (yy_lexical_state != YYINITIAL) {
-      err("End of file reached in illegal state at: " + yy_lexical_state + " " + STRING);
+      err("End of file reached in illegal state at: " + arr[yy_lexical_state]);
     }
   }
 		}
@@ -88,9 +89,9 @@ private char ascii;
 	private final int IGNORE = 3;
 	private final int yy_state_dtrans[] = {
 		0,
-		39,
-		42,
-		-1
+		47,
+		51,
+		52
 	};
 	private void yybegin (int state) {
 		yy_lexical_state = state;
@@ -271,9 +272,19 @@ private int [][] unpackFromString(int size1, int size2, String st)
 		YY_NO_ANCHOR,
 		YY_NO_ANCHOR,
 		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
+		YY_NO_ANCHOR,
 		YY_NOT_ACCEPT,
 		YY_NO_ANCHOR,
 		YY_NO_ANCHOR,
+		YY_NOT_ACCEPT,
+		YY_NOT_ACCEPT,
 		YY_NOT_ACCEPT
 	};
 	private int yy_cmap[] = {
@@ -285,14 +296,14 @@ private int [][] unpackFromString(int size1, int size2, String st)
 		5, 6, 7, 8, 9, 10, 11, 12,
 		13, 13, 13, 13, 13, 13, 13, 13,
 		13, 13, 14, 15, 16, 17, 18, 0,
-		0, 19, 19, 19, 19, 19, 19, 19,
-		19, 19, 19, 19, 19, 19, 19, 19,
-		19, 19, 19, 19, 19, 19, 19, 19,
-		19, 19, 19, 20, 21, 22, 0, 23,
-		0, 19, 19, 19, 19, 19, 19, 19,
-		19, 19, 19, 19, 19, 19, 24, 19,
-		19, 19, 19, 19, 25, 19, 26, 19,
-		19, 19, 19, 27, 28, 29, 0, 0
+		19, 20, 20, 20, 20, 20, 20, 20,
+		20, 20, 20, 20, 20, 20, 20, 20,
+		20, 20, 20, 20, 20, 20, 20, 20,
+		20, 20, 20, 21, 22, 23, 24, 25,
+		0, 26, 26, 26, 26, 26, 26, 26,
+		26, 26, 26, 26, 26, 26, 27, 26,
+		26, 26, 26, 26, 28, 26, 29, 26,
+		26, 26, 26, 30, 31, 32, 0, 0
 		
 	};
 	private int yy_rmap[] = {
@@ -300,11 +311,12 @@ private int [][] unpackFromString(int size1, int size2, String st)
 		1, 1, 1, 1, 1, 2, 3, 4,
 		1, 5, 1, 6, 7, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 8, 1, 1, 1, 1, 1, 9,
-		7, 10, 11 
+		1, 8, 1, 9, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 10,
+		7, 11, 12, 13, 14 
 	};
-	private int yy_nxt[][] = unpackFromString(12,30,
-"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,1,22,1,20:2,40,23,24,25,-1:37,26,-1:35,14,-1:33,27,-1:29,28,29,-1:28,30,-1:25,20,-1:5,20,-1:3,20:4,-1:6,34,-1:20,35,36,-1:7,31,-1:15,32,-1,33,-1:2,32:3,-1:15,38,-1:17,37:2,-1,37:4,41,37:22");
+	private int yy_nxt[][] = unpackFromString(15,33,
+"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,1,20,21,1,22,1:2,20:3,48,23,24,25,-1:40,26,-1:38,14,-1:36,27,-1:32,28,29,-1:31,30,-1:28,20,-1:6,20,-1:4,20:5,-1:6,34,-1:9,35,-1:8,36,-1,50,-1:2,37,38,-1:17,35,-1:19,31:3,32,31:18,33,31:10,-1:12,42,-1:39,39:7,40:4,-1:3,41:2,-1,41:4,49,41:25,43,44,45,43:19,46,43:6,44,43:3");
 	public java_cup.runtime.Symbol nextToken ()
 		throws java.io.IOException {
 		char yy_lookahead;
@@ -482,18 +494,17 @@ private int [][] unpackFromString(int size1, int size2, String st)
 					case -31:
 						break;
 					case 31:
-						{
-    yybegin(YYINITIAL); 
-    return tok(sym.STRING, str.toString()); }
+						{ str.append(yytext()); }
 					case -32:
 						break;
 					case 32:
-						{ str.append(yytext()); }
+						{
+    yybegin(YYINITIAL); 
+    return tok(sym.STRING, str.toString()); }
 					case -33:
 						break;
 					case 33:
-						{
-    str.append("\\"); }
+						{ yybegin(IGNORE); }
 					case -34:
 						break;
 					case 34:
@@ -503,34 +514,84 @@ private int [][] unpackFromString(int size1, int size2, String st)
 						break;
 					case 35:
 						{
-    str.append("\n"); }
+    String s = yytext();
+    if (s.length() <= 1)
+      err("Illegal ascii escape sequence.");
+    else {
+      s = s.substring(1).trim();
+      if (s.length() != 3)
+        err("Illegal ascii code.");
+      else {
+        str.append((char)Integer.parseInt(s));
+      }
+    }
+}
 					case -36:
 						break;
 					case 36:
 						{
-    str.append("\t"); }
+    str.append("\\"); }
 					case -37:
 						break;
 					case 37:
-						{ }
+						{
+    str.append("\n"); }
 					case -38:
 						break;
 					case 38:
+						{
+    str.append("\t"); }
+					case -39:
+						break;
+					case 39:
+						{ str.append(yytext()); System.out.println(yytext());}
+					case -40:
+						break;
+					case 40:
+						{
+    String s = yytext().substring(0, 2);
+    System.out.print("yy: " + yytext() + " " + s);
+    char c = yytext().charAt(2);
+    s += yytext().charAt(2);
+}
+					case -41:
+						break;
+					case 41:
+						{ }
+					case -42:
+						break;
+					case 42:
 						{ 
     if (depth == 0) 
       yybegin(YYINITIAL);
     else
       depth--;
 }
-					case -39:
+					case -43:
 						break;
-					case 40:
-						{}
-					case -40:
+					case 43:
+						{ err("Illegal token in ignore: " + yytext()); }
+					case -44:
 						break;
-					case 41:
+					case 44:
 						{ }
-					case -41:
+					case -45:
+						break;
+					case 45:
+						{ newline(); }
+					case -46:
+						break;
+					case 46:
+						{ yybegin(STRING); }
+					case -47:
+						break;
+					case 48:
+						{}
+					case -48:
+						break;
+					case 49:
+						{ }
+					case -49:
 						break;
 					default:
 						yy_error(YY_E_INTERNAL,false);

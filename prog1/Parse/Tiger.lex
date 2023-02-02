@@ -30,15 +30,13 @@ private java_cup.runtime.Symbol tok(int kind, Object value) {
 }
 
 private ErrorMsg errorMsg;
+private StringBuffer str;
+private int depth;
 
 Yylex(java.io.InputStream s, ErrorMsg e) {
   this(s);
   errorMsg=e;
 }
-
-private StringBuffer str;
-private int depth;
-private char ascii;
 
 %}
 
@@ -50,8 +48,10 @@ private char ascii;
 
 %eof{
   {
+    String[] arr = new String[4];
+    arr[0] = "YYINITIAL"; arr[1] = "STRING"; arr[2] = "COMMENT"; arr[3] = "IGNORE";
     if (yy_lexical_state != YYINITIAL) {
-      err("End of file reached in illegal state at: " + yy_lexical_state + " " + STRING);
+      err("End of file reached in illegal state at: " + arr[yy_lexical_state]);
     }
   }
 %eof}
@@ -59,9 +59,10 @@ private char ascii;
 %state STRING, COMMENT, IGNORE
 
 ALPHA=[A-Za-z]
+LOWER=[a-z]
 DIGIT=[0-9]
 WHITE_SPACE=[\t\f\b\r\v\ ]
-
+CTRL_CHAR=[@-_]
 %%
 <YYINITIAL> {WHITE_SPACE}	{}
 <YYINITIAL> \n {newline();}
@@ -93,20 +94,46 @@ WHITE_SPACE=[\t\f\b\r\v\ ]
     yybegin(STRING); 
     str = new StringBuffer(""); }
 
-<STRING> {ALPHA} { str.append(yytext()); } 
+<STRING> [^\\\"] { str.append(yytext()); }
+<STRING> \\ { yybegin(IGNORE); }
+
+<IGNORE> {WHITE_SPACE} { }
+<IGNORE> \n { newline(); }
+<IGNORE> \\ { yybegin(STRING); }
+<IGNORE> . { err("Illegal token in ignore: " + yytext()); }
+
 <STRING> \\n {
     str.append("\n"); }
 <STRING> \\t {
     str.append("\t"); }
 <STRING> "\\"" {
     str.append("\""); }
-<STRING> \\ { // TODO FIX THIS
+<STRING> \\\\ {
     str.append("\\"); }
-// still need to do formatting (IGNORE state), control characters (0-31), 
-// and ascii decimal escape sequences
 <STRING> "\"" {
     yybegin(YYINITIAL); 
     return tok(sym.STRING, str.toString()); }
+<STRING> (\\{DIGIT}*) {
+    String s = yytext();
+    if (s.length() <= 1)
+      err("Illegal ascii escape sequence.");
+    else {
+      s = s.substring(1).trim();
+      if (s.length() != 3)
+        err("Illegal ascii code.");
+      else {
+        str.append((char)Integer.parseInt(s));
+      }
+    }
+}
+<STRING> (\\"^"({CTRL_CHAR})) { str.append(yytext()); }
+<STRING> (\\"^"({LOWER})) {
+    String s = yytext().substring(0, 2);
+    System.out.print("yy: " + yytext() + " " + s);
+    char c = yytext().charAt(2);
+    s += yytext().charAt(2);
+    
+}
 
 <YYINITIAL> {DIGIT}+ {
     return tok(sym.INT, yytext()); }
@@ -124,4 +151,4 @@ WHITE_SPACE=[\t\f\b\r\v\ ]
       depth--;
 }
 <COMMENT> . { }
-<COMMENT> \n { depth++; }
+<COMMENT> "/*" { depth++; }
