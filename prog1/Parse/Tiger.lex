@@ -36,23 +36,34 @@ Yylex(java.io.InputStream s, ErrorMsg e) {
   errorMsg=e;
 }
 
+private StringBuffer str;
+private int depth;
+private char ascii;
+
 %}
 
 %eofval{
 	{
 	 return tok(sym.EOF, null);
   }
-%eofval}    
+%eofval}
 
-%state STRING
-%state COMMENT
+%eof{
+  {
+    if (yy_lexical_state != YYINITIAL) {
+      err("End of file reached in illegal state at: " + yy_lexical_state + " " + STRING);
+    }
+  }
+%eof}
+
+%state STRING, COMMENT, IGNORE
 
 ALPHA=[A-Za-z]
 DIGIT=[0-9]
-WHITE_SPACE=[\n\t\f\b\r\v]
+WHITE_SPACE=[\t\f\b\r\v\ ]
 
 %%
-<YYINITIAL> " "	{}
+<YYINITIAL> {WHITE_SPACE}	{}
 <YYINITIAL> \n {newline();}
 <YYINITIAL> ","	{return tok(sym.COMMA, null);}
 <YYINITIAL> ":"	{return tok(sym.COLON, null);}
@@ -78,40 +89,25 @@ WHITE_SPACE=[\n\t\f\b\r\v]
 <YYINITIAL> "|"	{return tok(sym.OR, null);}
 <YYINITIAL> ":="	{return tok(sym.ASSIGN, null);}
 
-<YYINITIAL> "while" {return tok(sym.WHILE); }
-<YYINITIAL> "for" {return tok(sym.FOR); }
-<YYINITIAL> "to" {return tok(sym.TO); }
-<YYINITIAL> "break" {return tok(sym.BREAK); }
-<YYINITIAL> "let" {return tok(sym.LET); }
-<YYINITIAL> "in" {return tok(sym.IN)); }
-<YYINITIAL> "end" {return tok(sym.END); }
-<YYINITIAL> "function" {return tok(sym.FUNCTION); }
-<YYINITIAL> "var" {return tok(sym.VAR); }
-<YYINITIAL> "type" {return tok(sym.TYPE); }
-<YYINITIAL> "array" {return tok(sym.ARRAY); }
-<YYINITIAL> "if" {return tok(sym.IF); }
-<YYINITIAL> "then" {return tok(sym.THEN); }
-<YYINITIAL> "else" {return tok(sym.ELSE); }
-<YYINITIAL> "do" {return tok(sym.DO); }
-<YYINITIAL> "of" {return tok(sym.OF); }
-<YYINITIAL> "nil" {return tok(sym.NIL); }
-
 <YYINITIAL> "\"" { 
     yybegin(STRING); 
-    String str = ""; }
+    str = new StringBuffer(""); }
 
-// for comments: "/*" begins comment, "*/" ends comment
-// need to keep track of comment count
-
-<STRING> {ALPHA} { str += yytext(); }
-<STRING> "\"" { 
+<STRING> {ALPHA} { str.append(yytext()); } 
+<STRING> \\n {
+    str.append("\n"); }
+<STRING> \\t {
+    str.append("\t"); }
+<STRING> "\\"" {
+    str.append("\""); }
+<STRING> \\ { // TODO FIX THIS
+    str.append("\\"); }
+// still need to do formatting (IGNORE state), control characters (0-31), 
+// and ascii decimal escape sequences
+<STRING> "\"" {
     yybegin(YYINITIAL); 
-    return tok(sym.STRING, yytext()); }
+    return tok(sym.STRING, str.toString()); }
 
-// still need to look at all escape sequences in a string
-// e.g.:
-<STRING> "\n" {
-    str += "\n"; }
 <YYINITIAL> {DIGIT}+ {
     return tok(sym.INT, yytext()); }
 
@@ -119,3 +115,13 @@ WHITE_SPACE=[\n\t\f\b\r\v]
     return tok(sym.ID, yytext()); }
 
 <YYINITIAL> . { err("Illegal character: " + yytext()); }
+
+<YYINITIAL> "/*" { yybegin(COMMENT); depth = 0; }
+<COMMENT> "*/" { 
+    if (depth == 0) 
+      yybegin(YYINITIAL);
+    else
+      depth--;
+}
+<COMMENT> . { }
+<COMMENT> \n { depth++; }
