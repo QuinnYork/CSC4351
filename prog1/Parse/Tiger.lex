@@ -59,11 +59,21 @@ Yylex(java.io.InputStream s, ErrorMsg e) {
 %state STRING, COMMENT, IGNORE
 
 ALPHA=[A-Za-z]
-LOWER=[a-z]
+LOWER=[`-z]
 DIGIT=[0-9]
 WHITE_SPACE=[\t\f\b\r\v\ ]
 CTRL_CHAR=[@-_]
 %%
+<YYINITIAL> "/*" { yybegin(COMMENT); depth = 0; }
+<COMMENT> "*/" { 
+    if (depth == 0) 
+      yybegin(YYINITIAL);
+    else
+      depth--;
+}
+<COMMENT> . { }
+<COMMENT> "/*" { depth++; }
+
 <YYINITIAL> {WHITE_SPACE}	{}
 <YYINITIAL> \n {newline();}
 <YYINITIAL> ","	{return tok(sym.COMMA, null);}
@@ -129,10 +139,10 @@ CTRL_CHAR=[@-_]
 <STRING> (\\"^"({CTRL_CHAR})) { str.append(yytext()); }
 <STRING> (\\"^"({LOWER})) {
     String s = yytext().substring(0, 2);
-    System.out.print("yy: " + yytext() + " " + s);
-    char c = yytext().charAt(2);
-    s += yytext().charAt(2);
-    
+    int c = (int)yytext().charAt(2);
+    c = c - 1 - 95 + 64;
+    s += (char)c;
+    str.append(s);
 }
 
 <YYINITIAL> {DIGIT}+ {
@@ -142,13 +152,3 @@ CTRL_CHAR=[@-_]
     return tok(sym.ID, yytext()); }
 
 <YYINITIAL> . { err("Illegal character: " + yytext()); }
-
-<YYINITIAL> "/*" { yybegin(COMMENT); depth = 0; }
-<COMMENT> "*/" { 
-    if (depth == 0) 
-      yybegin(YYINITIAL);
-    else
-      depth--;
-}
-<COMMENT> . { }
-<COMMENT> "/*" { depth++; }

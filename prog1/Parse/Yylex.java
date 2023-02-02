@@ -90,8 +90,8 @@ Yylex(java.io.InputStream s, ErrorMsg e) {
 	private final int yy_state_dtrans[] = {
 		0,
 		47,
-		51,
-		52
+		52,
+		53
 	};
 	private void yybegin (int state) {
 		yy_lexical_state = state;
@@ -284,6 +284,7 @@ private int [][] unpackFromString(int size1, int size2, String st)
 		YY_NO_ANCHOR,
 		YY_NO_ANCHOR,
 		YY_NOT_ACCEPT,
+		YY_NO_ANCHOR,
 		YY_NOT_ACCEPT,
 		YY_NOT_ACCEPT
 	};
@@ -300,23 +301,23 @@ private int [][] unpackFromString(int size1, int size2, String st)
 		20, 20, 20, 20, 20, 20, 20, 20,
 		20, 20, 20, 20, 20, 20, 20, 20,
 		20, 20, 20, 21, 22, 23, 24, 25,
-		0, 26, 26, 26, 26, 26, 26, 26,
-		26, 26, 26, 26, 26, 26, 27, 26,
-		26, 26, 26, 26, 28, 26, 29, 26,
-		26, 26, 26, 30, 31, 32, 0, 0
+		26, 27, 27, 27, 27, 27, 27, 27,
+		27, 27, 27, 27, 27, 27, 28, 27,
+		27, 27, 27, 27, 29, 27, 30, 27,
+		27, 27, 27, 31, 32, 33, 0, 0
 		
 	};
 	private int yy_rmap[] = {
 		0, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 2, 3, 4,
-		1, 5, 1, 6, 7, 1, 1, 1,
+		1, 1, 1, 1, 2, 3, 4, 1,
+		5, 1, 6, 7, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 8, 1, 9, 1, 1, 1, 1,
+		8, 1, 9, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 10,
-		7, 11, 12, 13, 14 
+		7, 11, 12, 13, 14, 15 
 	};
-	private int yy_nxt[][] = unpackFromString(15,33,
-"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,1,20,21,1,22,1:2,20:3,48,23,24,25,-1:40,26,-1:38,14,-1:36,27,-1:32,28,29,-1:31,30,-1:28,20,-1:6,20,-1:4,20:5,-1:6,34,-1:9,35,-1:8,36,-1,50,-1:2,37,38,-1:17,35,-1:19,31:3,32,31:18,33,31:10,-1:12,42,-1:39,39:7,40:4,-1:3,41:2,-1,41:4,49,41:25,43,44,45,43:19,46,43:6,44,43:3");
+	private int yy_nxt[][] = unpackFromString(16,34,
+"-1,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,-1,19,20,-1,21,-1:3,19:3,48,22,23,24,-1:41,25,-1:39,13,-1:37,26,-1:33,27,28,-1:32,29,-1:29,19,-1:6,19,-1:4,19,-1,19:4,-1:6,33,-1:9,34,-1:8,35,-1,50,-1:3,36,37,-1:17,34,-1:20,30:3,31,30:18,32,30:11,-1:12,41,-1:40,38:7,39:5,-1:10,42,-1:26,40:2,-1,40:4,49,40:4,51,40:21,43,44,45,43:19,46,43:7,44,43:3");
 	public java_cup.runtime.Symbol nextToken ()
 		throws java.io.IOException {
 		char yy_lookahead;
@@ -370,149 +371,145 @@ private int [][] unpackFromString(int size1, int size2, String st)
 					}
 					switch (yy_last_accept_state) {
 					case 1:
-						{ err("Illegal character: " + yytext()); }
+						{}
 					case -2:
 						break;
 					case 2:
-						{}
+						{newline();}
 					case -3:
 						break;
 					case 3:
-						{newline();}
-					case -4:
-						break;
-					case 4:
 						{ 
     yybegin(STRING); 
     str = new StringBuffer(""); }
+					case -4:
+						break;
+					case 4:
+						{return tok(sym.AND, null);}
 					case -5:
 						break;
 					case 5:
-						{return tok(sym.AND, null);}
+						{return tok(sym.LPAREN, null);}
 					case -6:
 						break;
 					case 6:
-						{return tok(sym.LPAREN, null);}
+						{return tok(sym.RPAREN, null);}
 					case -7:
 						break;
 					case 7:
-						{return tok(sym.RPAREN, null);}
+						{return tok(sym.TIMES, null);}
 					case -8:
 						break;
 					case 8:
-						{return tok(sym.TIMES, null);}
+						{return tok(sym.PLUS, null);}
 					case -9:
 						break;
 					case 9:
-						{return tok(sym.PLUS, null);}
+						{return tok(sym.COMMA, null);}
 					case -10:
 						break;
 					case 10:
-						{return tok(sym.COMMA, null);}
+						{return tok(sym.MINUS, null);}
 					case -11:
 						break;
 					case 11:
-						{return tok(sym.MINUS, null);}
+						{return tok(sym.DOT, null);}
 					case -12:
 						break;
 					case 12:
-						{return tok(sym.DOT, null);}
+						{return tok(sym.DIVIDE, null);}
 					case -13:
 						break;
 					case 13:
-						{return tok(sym.DIVIDE, null);}
+						{
+    return tok(sym.INT, yytext()); }
 					case -14:
 						break;
 					case 14:
-						{
-    return tok(sym.INT, yytext()); }
+						{return tok(sym.COLON, null);}
 					case -15:
 						break;
 					case 15:
-						{return tok(sym.COLON, null);}
+						{return tok(sym.SEMICOLON, null);}
 					case -16:
 						break;
 					case 16:
-						{return tok(sym.SEMICOLON, null);}
+						{return tok(sym.LT, null);}
 					case -17:
 						break;
 					case 17:
-						{return tok(sym.LT, null);}
+						{return tok(sym.EQ, null);}
 					case -18:
 						break;
 					case 18:
-						{return tok(sym.EQ, null);}
+						{return tok(sym.GT, null);}
 					case -19:
 						break;
 					case 19:
-						{return tok(sym.GT, null);}
+						{
+    return tok(sym.ID, yytext()); }
 					case -20:
 						break;
 					case 20:
-						{
-    return tok(sym.ID, yytext()); }
+						{return tok(sym.LBRACE, null);}
 					case -21:
 						break;
 					case 21:
-						{return tok(sym.LBRACE, null);}
+						{return tok(sym.RBRACE, null);}
 					case -22:
 						break;
 					case 22:
-						{return tok(sym.RBRACE, null);}
+						{return tok(sym.LBRACK, null);}
 					case -23:
 						break;
 					case 23:
-						{return tok(sym.LBRACK, null);}
+						{return tok(sym.OR, null);}
 					case -24:
 						break;
 					case 24:
-						{return tok(sym.OR, null);}
+						{return tok(sym.RBRACK, null);}
 					case -25:
 						break;
 					case 25:
-						{return tok(sym.RBRACK, null);}
+						{ yybegin(COMMENT); depth = 0; }
 					case -26:
 						break;
 					case 26:
-						{ yybegin(COMMENT); depth = 0; }
+						{return tok(sym.ASSIGN, null);}
 					case -27:
 						break;
 					case 27:
-						{return tok(sym.ASSIGN, null);}
+						{return tok(sym.LE, null);}
 					case -28:
 						break;
 					case 28:
-						{return tok(sym.LE, null);}
+						{return tok(sym.NEQ, null);}
 					case -29:
 						break;
 					case 29:
-						{return tok(sym.NEQ, null);}
+						{return tok(sym.GE, null);}
 					case -30:
 						break;
 					case 30:
-						{return tok(sym.GE, null);}
+						{ str.append(yytext()); }
 					case -31:
 						break;
 					case 31:
-						{ str.append(yytext()); }
-					case -32:
-						break;
-					case 32:
 						{
     yybegin(YYINITIAL); 
     return tok(sym.STRING, str.toString()); }
+					case -32:
+						break;
+					case 32:
+						{ yybegin(IGNORE); }
 					case -33:
 						break;
 					case 33:
-						{ yybegin(IGNORE); }
+						{
+    str.append("\""); }
 					case -34:
 						break;
 					case 34:
-						{
-    str.append("\""); }
-					case -35:
-						break;
-					case 35:
 						{
     String s = yytext();
     if (s.length() <= 1)
@@ -526,47 +523,52 @@ private int [][] unpackFromString(int size1, int size2, String st)
       }
     }
 }
+					case -35:
+						break;
+					case 35:
+						{
+    str.append("\\"); }
 					case -36:
 						break;
 					case 36:
 						{
-    str.append("\\"); }
+    str.append("\n"); }
 					case -37:
 						break;
 					case 37:
 						{
-    str.append("\n"); }
+    str.append("\t"); }
 					case -38:
 						break;
 					case 38:
-						{
-    str.append("\t"); }
+						{ str.append(yytext()); }
 					case -39:
 						break;
 					case 39:
-						{ str.append(yytext()); System.out.println(yytext());}
+						{
+    String s = yytext().substring(0, 2);
+    int c = (int)yytext().charAt(2);
+    c = c - 1 - 95 + 64;
+    s += (char)c;
+    str.append(s);
+}
 					case -40:
 						break;
 					case 40:
-						{
-    String s = yytext().substring(0, 2);
-    System.out.print("yy: " + yytext() + " " + s);
-    char c = yytext().charAt(2);
-    s += yytext().charAt(2);
-}
+						{ }
 					case -41:
 						break;
 					case 41:
-						{ }
-					case -42:
-						break;
-					case 42:
 						{ 
     if (depth == 0) 
       yybegin(YYINITIAL);
     else
       depth--;
 }
+					case -42:
+						break;
+					case 42:
+						{ depth++; }
 					case -43:
 						break;
 					case 43:
@@ -592,6 +594,10 @@ private int [][] unpackFromString(int size1, int size2, String st)
 					case 49:
 						{ }
 					case -49:
+						break;
+					case 51:
+						{ }
+					case -50:
 						break;
 					default:
 						yy_error(YY_E_INTERNAL,false);
