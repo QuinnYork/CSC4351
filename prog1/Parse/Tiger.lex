@@ -78,9 +78,30 @@ WHITE_SPACE=[\n\t\f\b\r\v]
 <YYINITIAL> "|"	{return tok(sym.OR, null);}
 <YYINITIAL> ":="	{return tok(sym.ASSIGN, null);}
 
+<YYINITIAL> "while" {return tok(sym.WHILE); }
+<YYINITIAL> "for" {return tok(sym.FOR); }
+<YYINITIAL> "to" {return tok(sym.TO); }
+<YYINITIAL> "break" {return tok(sym.BREAK); }
+<YYINITIAL> "let" {return tok(sym.LET); }
+<YYINITIAL> "in" {return tok(sym.IN)); }
+<YYINITIAL> "end" {return tok(sym.END); }
+<YYINITIAL> "function" {return tok(sym.FUNCTION); }
+<YYINITIAL> "var" {return tok(sym.VAR); }
+<YYINITIAL> "type" {return tok(sym.TYPE); }
+<YYINITIAL> "array" {return tok(sym.ARRAY); }
+<YYINITIAL> "if" {return tok(sym.IF); }
+<YYINITIAL> "then" {return tok(sym.THEN); }
+<YYINITIAL> "else" {return tok(sym.ELSE); }
+<YYINITIAL> "do" {return tok(sym.DO); }
+<YYINITIAL> "of" {return tok(sym.OF); }
+<YYINITIAL> "nil" {return tok(sym.NIL); }
+
 <YYINITIAL> "\"" { 
     yybegin(STRING); 
     String str = ""; }
+
+// for comments: "/*" begins comment, "*/" ends comment
+// need to keep track of comment count
 
 <STRING> {ALPHA} { str += yytext(); }
 <STRING> "\"" { 
