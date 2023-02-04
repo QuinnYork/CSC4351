@@ -64,6 +64,7 @@ DIGIT=[0-9]
 WHITE_SPACE=[\t\f\b\r\v\ ]
 CTRL_CHAR=[@-_]
 %%
+
 <YYINITIAL> "/*" { yybegin(COMMENT); depth = 0; }
 <COMMENT> "*/" { 
     if (depth == 0) 
@@ -75,16 +76,16 @@ CTRL_CHAR=[@-_]
 <COMMENT> "/*" { depth++; }
 
 <YYINITIAL> {WHITE_SPACE}	{}
-<YYINITIAL> \n {newline();}
+<YYINITIAL, COMMENT> \n {newline();}
 <YYINITIAL> ","	{return tok(sym.COMMA, null);}
 <YYINITIAL> ":"	{return tok(sym.COLON, null);}
 <YYINITIAL> ";"	{return tok(sym.SEMICOLON, null);}
 <YYINITIAL> "("	{return tok(sym.LPAREN, null);}
 <YYINITIAL> ")"	{return tok(sym.RPAREN, null);}
-<YYINITIAL> "["	{return tok(sym.LBRACE, null);}
-<YYINITIAL> "]"	{return tok(sym.RBRACE, null);}
-<YYINITIAL> "{"	{return tok(sym.LBRACK, null);}
-<YYINITIAL> "}"	{return tok(sym.RBRACK, null);}
+<YYINITIAL> "["	{return tok(sym.LBRACK, null);}
+<YYINITIAL> "]"	{return tok(sym.RBRACK, null);}
+<YYINITIAL> "{"	{return tok(sym.LBRACE, null);}
+<YYINITIAL> "}"	{return tok(sym.RBRACE, null);}
 <YYINITIAL> "."	{return tok(sym.DOT, null);}
 <YYINITIAL> "+"	{return tok(sym.PLUS, null);}
 <YYINITIAL> "-"	{return tok(sym.MINUS, null);}
@@ -136,9 +137,9 @@ CTRL_CHAR=[@-_]
       }
     }
 }
-<STRING> (\\"^"({CTRL_CHAR})) { str.append(yytext()); }
+<STRING> (\\"^"({CTRL_CHAR})) { str.append(yytext().substring(1)); }
 <STRING> (\\"^"({LOWER})) {
-    String s = yytext().substring(0, 2);
+    String s = yytext().substring(1, 2);
     int c = (int)yytext().charAt(2);
     c = c - 1 - 95 + 64;
     s += (char)c;
