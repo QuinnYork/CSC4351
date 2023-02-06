@@ -137,13 +137,14 @@ CTRL_CHAR=[@-_]
       }
     }
 }
-<STRING> (\\"^"({CTRL_CHAR})) { str.append(yytext().substring(1)); }
+<STRING> (\\"^"({CTRL_CHAR})) { 
+    int c = (int)yytext().charAt(2) - 64;
+    str.append((char)c); 
+}
 <STRING> (\\"^"({LOWER})) {
-    String s = yytext().substring(1, 2);
     int c = (int)yytext().charAt(2);
-    c = c - 1 - 95 + 64;
-    s += (char)c;
-    str.append(s);
+    c = c - 1 - 95;
+    str.append((char)c);
 }
 
 <YYINITIAL> {DIGIT}+ {
