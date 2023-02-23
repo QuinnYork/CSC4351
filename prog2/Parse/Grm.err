@@ -1,0 +1,353 @@
+Opening files...
+Parsing specification from standard input...
+Precedence declaration: Can't find terminal Exp
+Checking specification...
+Warning: Terminal "FUNCTION" was declared but never used
+Warning: Terminal "GE" was declared but never used
+Warning: Terminal "LPAREN" was declared but never used
+Warning: Terminal "ARRAY" was declared but never used
+Warning: Terminal "FOR" was declared but never used
+Warning: Terminal "RPAREN" was declared but never used
+Warning: Terminal "SEMICOLON" was declared but never used
+Warning: Terminal "AND" was declared but never used
+Warning: Terminal "LT" was declared but never used
+Warning: Terminal "TYPE" was declared but never used
+Warning: Terminal "NIL" was declared but never used
+Warning: Terminal "IN" was declared but never used
+Warning: Terminal "OR" was declared but never used
+Warning: Terminal "COMMA" was declared but never used
+Warning: Terminal "IF" was declared but never used
+Warning: Terminal "DOT" was declared but never used
+Warning: Terminal "LE" was declared but never used
+Warning: Terminal "OF" was declared but never used
+Warning: Terminal "NEQ" was declared but never used
+Warning: Terminal "BREAK" was declared but never used
+Warning: Terminal "EQ" was declared but never used
+Warning: Terminal "LBRACK" was declared but never used
+Warning: Terminal "COLON" was declared but never used
+Warning: Terminal "LBRACE" was declared but never used
+Warning: Terminal "ELSE" was declared but never used
+Warning: Terminal "RBRACK" was declared but never used
+Warning: Terminal "TO" was declared but never used
+Warning: Terminal "WHILE" was declared but never used
+Warning: Terminal "LET" was declared but never used
+Warning: Terminal "THEN" was declared but never used
+Warning: Terminal "RBRACE" was declared but never used
+Warning: Terminal "END" was declared but never used
+Warning: Terminal "STRING" was declared but never used
+Warning: Terminal "GT" was declared but never used
+Warning: Terminal "VAR" was declared but never used
+Warning: Terminal "DO" was declared but never used
+Building parse tables...
+  Computing non-terminal nullability...
+  Computing first sets...
+  Building state machine...
+  Filling in tables...
+  Checking for non-reduced productions...
+Writing parser...
+===== Terminals =====
+DIVIDE FUNCTION GE UMINUS LPAREN 
+INT ARRAY FOR MINUS RPAREN 
+SEMICOLON AND LT TYPE NIL 
+IN OR COMMA PLUS ASSIGN 
+IF DOT ID LE OF 
+EOF error NEQ BREAK EQ 
+LBRACK TIMES COLON LBRACE ELSE 
+RBRACK TO WHILE LET THEN 
+RBRACE END STRING GT VAR 
+DO 
+
+===== Non terminals =====
+Exp $START Var 
+
+===== Productions =====
+Var ::= ID 
+Exp ::= Var ASSIGN Exp 
+Exp ::= MINUS Exp 
+Exp ::= Exp DIVIDE Exp 
+Exp ::= Exp TIMES Exp 
+Exp ::= Exp PLUS Exp 
+Exp ::= Exp MINUS Exp 
+Exp ::= INT 
+Exp ::= Var 
+Exp ::= error 
+$START ::= Exp EOF 
+
+===== Viable Prefix Recognizer =====
+START lalr_state [0]: {
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+  [$START ::= (*) Exp EOF , {EOF }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [3]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [1]: {
+  [Var ::= ID (*) , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+}
+
+-------------------
+lalr_state [2]: {
+  [Exp ::= error (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+
+-------------------
+lalr_state [3]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [$START ::= Exp (*) EOF , {EOF }]
+}
+transition on TIMES to state [12]
+transition on EOF to state [18]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [4]: {
+  [Exp ::= MINUS (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [17]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [5]: {
+  [Exp ::= INT (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+
+-------------------
+lalr_state [6]: {
+  [Exp ::= Var (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Var (*) ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on ASSIGN to state [7]
+
+-------------------
+lalr_state [7]: {
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Var ASSIGN (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [8]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [8]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Var ASSIGN Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on TIMES to state [12]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [9]: {
+  [Exp ::= Exp PLUS (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [16]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [10]: {
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= Exp MINUS (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [15]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [11]: {
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp DIVIDE (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [14]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [12]: {
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp TIMES (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on Var to state [6]
+transition on INT to state [5]
+transition on MINUS to state [4]
+transition on Exp to state [13]
+transition on error to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [13]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp TIMES Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on TIMES to state [12]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [14]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp DIVIDE Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on TIMES to state [12]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [15]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp MINUS Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on TIMES to state [12]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [16]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp PLUS Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on TIMES to state [12]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [17]: {
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= MINUS Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+}
+transition on TIMES to state [12]
+transition on DIVIDE to state [11]
+transition on MINUS to state [10]
+transition on PLUS to state [9]
+
+-------------------
+lalr_state [18]: {
+  [$START ::= Exp EOF (*) , {EOF }]
+}
+
+-------------------
+Closing files...
+------- CUP v0.10g Parser Generation Summary -------
+  0 errors and 36 warnings
+  46 terminals, 3 non terminals, and 11 productions declared, 
+  producing 19 unique parse states.
+  36 terminals declared but not used.
+  0 non terminals declared but not used.
+  0 productions never reduced.
+  0 conflicts detected (3 expected).
+  Code written to "Grm.java", and "sym.java".
+---------------------------------------------------- (v0.10g)

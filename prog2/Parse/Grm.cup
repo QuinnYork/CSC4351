@@ -32,19 +32,52 @@ terminal Integer INT;
 terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK, 
 	LBRACE, RBRACE, DOT, PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, LT, LE, 
 	GT, GE, AND, OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO,
-	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE;
+	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE, UMINUS;
 
+/* add more non terminal grammar definitions to make it less ambiguous */
 non terminal Absyn.Exp          Exp;
 non terminal Absyn.Var          Var;
+non terminal Absyn.Ty           Ty;
+non terminal Absyn.Dec          Dec;
+
+/* Precedences */
+precedence nonassoc ASSIGN;
+precedence left AND, OR;
+precedence nonassoc EQ, NEQ, LT, GT, LE, GE;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence right Exp;
+precedence left UMINUS; /* greatest presidence, followed by mult/div and finally add/sub */
 
 start with Exp;
 
 Exp ::= error:e
-	  {: RESULT = new Absyn.SeqExp(eleft, null); :}
-	| Var:v
-	  {: RESULT = new Absyn.VarExp(vleft, v); :}
+	      {: RESULT = new Absyn.SeqExp(eleft, null); :}
+	    | Var:v
+	      {: RESULT = new Absyn.VarExp(vleft, v); :}
+      | INT:e
+        {: RESULT = new Absyn.IntExp(eleft, e.intValue()); :}
+      | Exp:l MINUS:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.MINUS, r); :}
+      | Exp:l PLUS:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.PLUS, r); :}
+      | Exp:l TIMES:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.MUL, r); :}
+      | Exp:l DIVIDE:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.DIV, r); :}
+      | MINUS Exp %prec UMINUS
+      | Var:v ASSIGN Exp:e
+        {: RESULT = new Absyn.AssignExp(vleft, v, e); :}
+      | LPAREN
 	;
 
-Var ::=   ID:n
-	  {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
+Var ::= ID:n
+	      {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
 	;
+
+Ty ::= ID:n
+     | LBRACE Exp:e RBRACE 
+     | Exp:l Exp:m Exp:r 
+    ;
+
+Dec ::= ;

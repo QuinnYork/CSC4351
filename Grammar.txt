@@ -1,0 +1,38 @@
+Grammar:
+
+Exp --> ( rest
+      | INT
+      | STRING
+      | ID
+      | NIL
+      | OP
+      | BOOL
+
+lvalue --> ID // variable or parameter
+         | lvalue . ID // record (for typedef)
+         | lvalue [ exp ] // array elements
+
+fundec --> type-id id ( tyfields ); // procedure dec
+         | type-id id ( tyfields ) { exp } // function dec
+
+vardec --> var id := exp // expression defines type
+         | var id : type-id := exp // type-id defines type
+
+decs --> {dec} // list of declarations
+
+dec --> tydec
+      | vardec
+      | fundec
+
+(typedef == id)
+tydec --> typedef ty type-id
+
+ty --> type-id
+     | { tyfields }
+     | array of type-id
+
+tyfields --> empty set
+           | id : type-id {, id : type-id}
+
+ForExp --> for id := exp to exp do exp
+         | for var id := exp to exp do exp
