@@ -10,7 +10,7 @@ Exp --> Var
 
 Var --> ID (LET, IF, WHILE, BREAK, CALL, FOR)
       | ID [INT] // subscript; change later
-      | 
+      | ID . ID
 
 Sequential Expressions: (exp;exp;...exp)
 
@@ -42,3 +42,5 @@ tyfields --> empty set
 
 ForExp --> for id := exp to exp do exp
          | for var id := exp to exp do exp
+
+typedef array of int type-id

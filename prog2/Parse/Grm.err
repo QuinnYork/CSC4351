@@ -26,6 +26,7 @@ Warning: Terminal "THEN" was declared but never used
 Warning: Terminal "END" was declared but never used
 Warning: Terminal "VAR" was declared but never used
 Warning: Terminal "DO" was declared but never used
+Warning: Non terminal "Next" was declared but never used
 Building parse tables...
   Computing non-terminal nullability...
   Computing first sets...
@@ -50,8 +51,8 @@ RBRACE END STRING GT VAR
 DO 
 
 ===== Non terminals =====
-Ty Exp Dec $START Var 
-
+Next Ty Exp Dec $START 
+Var 
 
 ===== Productions =====
 Dec ::= 
@@ -920,10 +921,10 @@ lalr_state [36]: {
 -------------------
 Closing files...
 ------- CUP v0.10g Parser Generation Summary -------
-  0 errors and 28 warnings
-  46 terminals, 5 non terminals, and 24 productions declared, 
+  0 errors and 29 warnings
+  46 terminals, 6 non terminals, and 24 productions declared, 
   producing 37 unique parse states.
-  24 terminals declared but not used.
+  25 terminals declared but not used.
   0 non terminals declared but not used.
   0 productions never reduced.
   0 conflicts detected (3 expected).

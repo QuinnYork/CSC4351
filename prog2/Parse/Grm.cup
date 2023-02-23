@@ -32,13 +32,16 @@ terminal Integer INT;
 terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK, 
 	LBRACE, RBRACE, DOT, PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, LT, LE, 
 	GT, GE, AND, OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO,
-	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE, UMINUS;
+	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE, UMINUS, TYPEDEF;
 
 /* add more non terminal grammar definitions to make it less ambiguous */
 non terminal Absyn.Exp          Exp;
 non terminal Absyn.Var          Var;
 non terminal Absyn.Ty           Ty;
 non terminal Absyn.Dec          Dec;
+non terminal Absyn.Dec          tydec;
+non terminal Absyn.Dec          vardec;
+non terminal Absyn.Dec          fundec;
 
 /* Precedences */
 precedence nonassoc ASSIGN;
@@ -97,4 +100,17 @@ Ty ::= ID:n
      | Exp:l Exp:m Exp:r 
   ;
 
-Dec ::= ;
+Dec ::= tydec
+      | vardec
+      | fundec
+  ;
+
+tydec ::= TYPEDEF ty:t ID:n
+          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, null); :}
+
+vardec ::= VAR ID:n ASSIGN Exp:i
+          {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
+         | VAR ID:n COLON NameTy:t ASSIGN Exp:i
+          {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
+
+fundec ::= 
