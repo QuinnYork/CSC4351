@@ -1,12 +1,18 @@
 Grammar:
 
-Exp --> ( rest
+Exp --> Var
       | INT
       | STRING
-      | ID
       | NIL
       | OP
-      | BOOL
+      | :=
+      | Record, Array, Seq (How do I represent these?)
+
+Var --> ID (LET, IF, WHILE, BREAK, CALL, FOR)
+      | ID [INT] // subscript; change later
+      | 
+
+Sequential Expressions: (exp;exp;...exp)
 
 lvalue --> ID // variable or parameter
          | lvalue . ID // record (for typedef)

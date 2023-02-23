@@ -3,39 +3,27 @@ Parsing specification from standard input...
 Precedence declaration: Can't find terminal Exp
 Checking specification...
 Warning: Terminal "FUNCTION" was declared but never used
-Warning: Terminal "GE" was declared but never used
 Warning: Terminal "LPAREN" was declared but never used
 Warning: Terminal "ARRAY" was declared but never used
 Warning: Terminal "FOR" was declared but never used
 Warning: Terminal "RPAREN" was declared but never used
 Warning: Terminal "SEMICOLON" was declared but never used
 Warning: Terminal "AND" was declared but never used
-Warning: Terminal "LT" was declared but never used
 Warning: Terminal "TYPE" was declared but never used
 Warning: Terminal "NIL" was declared but never used
 Warning: Terminal "IN" was declared but never used
 Warning: Terminal "OR" was declared but never used
 Warning: Terminal "COMMA" was declared but never used
 Warning: Terminal "IF" was declared but never used
-Warning: Terminal "DOT" was declared but never used
-Warning: Terminal "LE" was declared but never used
 Warning: Terminal "OF" was declared but never used
-Warning: Terminal "NEQ" was declared but never used
 Warning: Terminal "BREAK" was declared but never used
-Warning: Terminal "EQ" was declared but never used
-Warning: Terminal "LBRACK" was declared but never used
 Warning: Terminal "COLON" was declared but never used
-Warning: Terminal "LBRACE" was declared but never used
 Warning: Terminal "ELSE" was declared but never used
-Warning: Terminal "RBRACK" was declared but never used
 Warning: Terminal "TO" was declared but never used
 Warning: Terminal "WHILE" was declared but never used
 Warning: Terminal "LET" was declared but never used
 Warning: Terminal "THEN" was declared but never used
-Warning: Terminal "RBRACE" was declared but never used
 Warning: Terminal "END" was declared but never used
-Warning: Terminal "STRING" was declared but never used
-Warning: Terminal "GT" was declared but never used
 Warning: Terminal "VAR" was declared but never used
 Warning: Terminal "DO" was declared but never used
 Building parse tables...
@@ -44,6 +32,10 @@ Building parse tables...
   Building state machine...
   Filling in tables...
   Checking for non-reduced productions...
+*** Production "Dec ::= " never reduced
+*** Production "Ty ::= Exp Exp Exp " never reduced
+*** Production "Ty ::= LBRACE Exp RBRACE " never reduced
+*** Production "Ty ::= ID " never reduced
 Writing parser...
 ===== Terminals =====
 DIVIDE FUNCTION GE UMINUS LPAREN 
@@ -58,10 +50,24 @@ RBRACE END STRING GT VAR
 DO 
 
 ===== Non terminals =====
-Exp $START Var 
+Ty Exp Dec $START Var 
+
 
 ===== Productions =====
+Dec ::= 
+Ty ::= Exp Exp Exp 
+Ty ::= LBRACE Exp RBRACE 
+Ty ::= ID 
+Var ::= Var DOT ID 
+Var ::= Var LBRACK Exp RBRACK 
 Var ::= ID 
+Exp ::= STRING 
+Exp ::= Exp GE Exp 
+Exp ::= Exp GT Exp 
+Exp ::= Exp LE Exp 
+Exp ::= Exp LT Exp 
+Exp ::= Exp NEQ Exp 
+Exp ::= Exp EQ Exp 
 Exp ::= Var ASSIGN Exp 
 Exp ::= MINUS Exp 
 Exp ::= Exp DIVIDE Exp 
@@ -75,277 +81,849 @@ $START ::= Exp EOF
 
 ===== Viable Prefix Recognizer =====
 START lalr_state [0]: {
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
   [$START ::= (*) Exp EOF , {EOF }]
 }
+transition on INT to state [7]
 transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [3]
-transition on error to state [2]
+transition on MINUS to state [5]
+transition on Exp to state [4]
+transition on error to state [3]
+transition on STRING to state [2]
 transition on ID to state [1]
 
 -------------------
 lalr_state [1]: {
-  [Var ::= ID (*) , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
+  [Var ::= ID (*) , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
 
 -------------------
 lalr_state [2]: {
-  [Exp ::= error (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= STRING (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
 }
 
 -------------------
 lalr_state [3]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [$START ::= Exp (*) EOF , {EOF }]
+  [Exp ::= error (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
 }
-transition on TIMES to state [12]
-transition on EOF to state [18]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
 
 -------------------
 lalr_state [4]: {
-  [Exp ::= MINUS (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) GT Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [$START ::= Exp (*) EOF , {EOF }]
 }
-transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [17]
-transition on error to state [2]
-transition on ID to state [1]
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on EOF to state [36]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
 
 -------------------
 lalr_state [5]: {
-  [Exp ::= INT (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= MINUS (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [35]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
 
 -------------------
 lalr_state [6]: {
-  [Exp ::= Var (*) , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Var (*) ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Var (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= Var (*) LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Var (*) ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= Var (*) DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
-transition on ASSIGN to state [7]
+transition on ASSIGN to state [10]
+transition on DOT to state [9]
+transition on LBRACK to state [8]
 
 -------------------
 lalr_state [7]: {
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Var ASSIGN (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= INT (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
 }
-transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [8]
-transition on error to state [2]
-transition on ID to state [1]
 
 -------------------
 lalr_state [8]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Var ASSIGN Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= Var LBRACK (*) Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) MINUS Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
-transition on TIMES to state [12]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
-
--------------------
-lalr_state [9]: {
-  [Exp ::= Exp PLUS (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
-}
+transition on INT to state [7]
 transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [16]
-transition on error to state [2]
+transition on MINUS to state [5]
+transition on Exp to state [33]
+transition on error to state [3]
+transition on STRING to state [2]
 transition on ID to state [1]
 
 -------------------
-lalr_state [10]: {
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= Exp MINUS (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+lalr_state [9]: {
+  [Var ::= Var DOT (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
+transition on ID to state [32]
+
+-------------------
+lalr_state [10]: {
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Var ASSIGN (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+transition on INT to state [7]
 transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [15]
-transition on error to state [2]
+transition on MINUS to state [5]
+transition on Exp to state [11]
+transition on error to state [3]
+transition on STRING to state [2]
 transition on ID to state [1]
 
 -------------------
 lalr_state [11]: {
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp DIVIDE (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Var ASSIGN Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
 }
-transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [14]
-transition on error to state [2]
-transition on ID to state [1]
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
 
 -------------------
 lalr_state [12]: {
-  [Exp ::= (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Var ::= (*) ID , {EOF PLUS MINUS TIMES DIVIDE ASSIGN }]
-  [Exp ::= (*) Exp DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) error , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp TIMES (*) Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Var ASSIGN Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) Exp TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= (*) INT , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp MINUS (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
+transition on INT to state [7]
 transition on Var to state [6]
-transition on INT to state [5]
-transition on MINUS to state [4]
-transition on Exp to state [13]
-transition on error to state [2]
+transition on MINUS to state [5]
+transition on Exp to state [31]
+transition on error to state [3]
+transition on STRING to state [2]
 transition on ID to state [1]
 
 -------------------
 lalr_state [13]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp TIMES Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Exp DIVIDE (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
-transition on TIMES to state [12]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [30]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
 
 -------------------
 lalr_state [14]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp DIVIDE Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= Exp GE (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
-transition on TIMES to state [12]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [29]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
 
 -------------------
 lalr_state [15]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp MINUS Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp NEQ (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
 }
-transition on TIMES to state [12]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [28]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
 
 -------------------
 lalr_state [16]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp PLUS Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Exp PLUS (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
 }
-transition on TIMES to state [12]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [27]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
 
 -------------------
 lalr_state [17]: {
-  [Exp ::= Exp (*) PLUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) DIVIDE Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) MINUS Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= Exp (*) TIMES Exp , {EOF PLUS MINUS TIMES DIVIDE }]
-  [Exp ::= MINUS Exp (*) , {EOF PLUS MINUS TIMES DIVIDE }]
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Exp EQ (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
 }
-transition on TIMES to state [12]
-transition on DIVIDE to state [11]
-transition on MINUS to state [10]
-transition on PLUS to state [9]
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [26]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
 
 -------------------
 lalr_state [18]: {
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp LE (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [25]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [19]: {
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp GT (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [24]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [20]: {
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Exp TIMES (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [23]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [21]: {
+  [Exp ::= (*) Exp PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) INT , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var LBRACK Exp RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= (*) error , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) STRING , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var ASSIGN Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) Var DOT ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Exp LT (*) Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Var , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= (*) Exp LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= (*) ID , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+transition on INT to state [7]
+transition on Var to state [6]
+transition on MINUS to state [5]
+transition on Exp to state [22]
+transition on error to state [3]
+transition on STRING to state [2]
+transition on ID to state [1]
+
+-------------------
+lalr_state [22]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp LT Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [23]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp TIMES Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [24]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp GT Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [25]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp LE Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [26]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp EQ Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [27]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp PLUS Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [28]: {
+  [Exp ::= Exp NEQ Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [29]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp GE Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [30]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp DIVIDE Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [31]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp MINUS Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [32]: {
+  [Var ::= Var DOT ID (*) , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+
+-------------------
+lalr_state [33]: {
+  [Exp ::= Exp (*) GT Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Var ::= Var LBRACK Exp (*) RBRACK , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+  [Exp ::= Exp (*) GE Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on RBRACK to state [34]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [34]: {
+  [Var ::= Var LBRACK Exp RBRACK (*) , {EOF LBRACK RBRACK DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE ASSIGN }]
+}
+
+-------------------
+lalr_state [35]: {
+  [Exp ::= Exp (*) GT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= MINUS Exp (*) , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) NEQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) PLUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) EQ Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) DIVIDE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) MINUS Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) GE Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) LT Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+  [Exp ::= Exp (*) TIMES Exp , {EOF RBRACK PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE }]
+}
+transition on LT to state [21]
+transition on TIMES to state [20]
+transition on GT to state [19]
+transition on LE to state [18]
+transition on EQ to state [17]
+transition on PLUS to state [16]
+transition on NEQ to state [15]
+transition on GE to state [14]
+transition on DIVIDE to state [13]
+transition on MINUS to state [12]
+
+-------------------
+lalr_state [36]: {
   [$START ::= Exp EOF (*) , {EOF }]
 }
 
 -------------------
 Closing files...
 ------- CUP v0.10g Parser Generation Summary -------
-  0 errors and 36 warnings
-  46 terminals, 3 non terminals, and 11 productions declared, 
-  producing 19 unique parse states.
-  36 terminals declared but not used.
+  0 errors and 28 warnings
+  46 terminals, 5 non terminals, and 24 productions declared, 
+  producing 37 unique parse states.
+  24 terminals declared but not used.
   0 non terminals declared but not used.
   0 productions never reduced.
   0 conflicts detected (3 expected).

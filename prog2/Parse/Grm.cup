@@ -68,16 +68,33 @@ Exp ::= error:e
       | MINUS Exp %prec UMINUS
       | Var:v ASSIGN Exp:e
         {: RESULT = new Absyn.AssignExp(vleft, v, e); :}
-      | LPAREN
+      | Exp:l EQ:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.EQ, r); :}
+      | Exp:l NEQ:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.NE, r); :}
+      | Exp:l LT:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.LT, r); :}
+      | Exp:l LE:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.LE, r); :}
+      | Exp:l GT:o Exp:r
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.GT, r); :}
+      | Exp:l GE:o Exp:r 
+        {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.GE, r); :}
+      | STRING:s
+        {: RESULT = new Absyn.StringExp(sleft, s); :}
 	;
 
 Var ::= ID:n
 	      {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
+      | Var:v LBRACK Exp:i RBRACK
+        {: RESULT = new Absyn.SubscriptVar(vleft, v, i); :}
+      | Var:v DOT ID:f
+        {: RESULT = new Absyn.FieldVar(vleft, v, sym(f)); :}
 	;
 
 Ty ::= ID:n
      | LBRACE Exp:e RBRACE 
      | Exp:l Exp:m Exp:r 
-    ;
+  ;
 
 Dec ::= ;
