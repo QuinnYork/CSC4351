@@ -133,4 +133,7 @@ vardec ::= VAR ID:n ASSIGN Exp:i
          | VAR ID:n COLON NameTy:t ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
 
-fundec ::= 
+fundec ::= FUNCTION ID:n LPAREN TyFields:f RPAREN ASSIGN Exp:exp
+          {: RESULT = new Absyn.FunctionDec(fleft, n, f, null, exp); :}
+          | FUNCTION ID:n LPAREN TyFields:f RPAREN COLON typedec:t ASSIGN Exp:exp
+          {:RESULT = new Absyn.FunctionDec(fleft, sym(n), f, null, exp); :}
