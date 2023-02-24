@@ -86,6 +86,17 @@ Exp ::= error:e
         {: RESULT = new Absyn.OpExp(oleft, l, Absyn.OpExp.GE, r); :}
       | STRING:s
         {: RESULT = new Absyn.StringExp(sleft, s); :}
+      | WHILE:w Exp:exp1 DO Exp:exp2
+        {: Result = new Absyn.WhileExp(wleft, exp1, exp2); :}
+      | ID:n LBRACE Exp:exp1 RBRACE OF Exp:exp2
+        {: RESULT = new Absyn.ArrayExp(nleft, sym(n), exp1, exp2); :}
+      | BREAK:b IN ARRAY:a OR WHILE:w 
+        {: RESULT = new Absyn.BreakExp(bleft); :}
+      | Var:l ASSIGN Exp:eleft
+        {: Result = new Absyn.AssignExp(lleft, l, exp); :}
+      | FOR:f ID:n ASSIGN Exp:exp1 to Exp:exp2 DO Exp:exp3
+        {: RESULT = new Absyn.ForExp(fleft, new Absyn.VarDec(nleft, sym(n), f, exp1), exp1, exp2); :}
+      | 
 	;
 
 Var ::= ID:n
@@ -107,7 +118,7 @@ Ty ::= ID:n
 TyFields ::= 
           {: RESULT = NIL; :}
           | ID:n COLON TyFields:t
-          {RESULT = new Absyn.FieldList(nleft, sym(n), t); :}
+          {: RESULT = new Absyn.FieldList(nleft, sym(n), t); :}
 
 Dec ::= tydec
       | vardec
