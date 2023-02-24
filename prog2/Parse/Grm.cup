@@ -38,6 +38,7 @@ terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK,
 non terminal Absyn.Exp          Exp;
 non terminal Absyn.Var          Var;
 non terminal Absyn.Ty           Ty;
+non terminal Absyn.Ty           TyFields;
 non terminal Absyn.Dec          Dec;
 non terminal Absyn.Dec          tydec;
 non terminal Absyn.Dec          vardec;
@@ -96,9 +97,17 @@ Var ::= ID:n
 	;
 
 Ty ::= ID:n
-     | LBRACE Exp:e RBRACE 
-     | Exp:l Exp:m Exp:r 
+     {: RESULT = new Absyn.NameTy(nleft, sym(n); :}
+     | ARRAY: arr OF ID:n
+     {: RESULT = new Absyn.ArrayTy(nleft, sym(n)); :}
+     | LBRACE Tyfields:f RBRACE
+     {: RESULT = new Absyn.RecordTy(lleft, sym(f)); :}
   ;
+
+TyFields ::= 
+          {: RESULT = NIL; :}
+          | ID:n COLON TyFields:t
+          {RESULT = new Absyn.FieldList(nleft, sym(n), t); :}
 
 Dec ::= tydec
       | vardec
