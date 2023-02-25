@@ -119,6 +119,7 @@ TyFields ::=
           {: RESULT = NIL; :}
           | ID:n COLON TyFields:t
           {: RESULT = new Absyn.FieldList(nleft, sym(n), t); :}
+  ;
 
 Dec ::= tydec
       | vardec
@@ -127,13 +128,16 @@ Dec ::= tydec
 
 tydec ::= TYPEDEF ty:t ID:n
           {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, null); :}
+  ;
 
 vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
          | VAR ID:n COLON NameTy:t ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
+  ;
 
 fundec ::= FUNCTION ID:n LPAREN TyFields:f RPAREN ASSIGN Exp:exp
           {: RESULT = new Absyn.FunctionDec(fleft, n, f, null, exp); :}
           | FUNCTION ID:n LPAREN TyFields:f RPAREN COLON typedec:t ASSIGN Exp:exp
           {:RESULT = new Absyn.FunctionDec(fleft, sym(n), f, null, exp); :}
+  ;
