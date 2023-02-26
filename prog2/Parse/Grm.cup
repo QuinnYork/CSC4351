@@ -108,7 +108,7 @@ Var ::= ID:n
 	;
 
 Ty ::= ID:n
-     {: RESULT = new Absyn.NameTy(nleft, sym(n); :}
+     {: RESULT = new Absyn.NameTy(nleft, sym(n)); :}
      | ARRAY: arr OF ID:n
      {: RESULT = new Absyn.ArrayTy(nleft, sym(n)); :}
      | LBRACE Tyfields:f RBRACE
@@ -117,8 +117,8 @@ Ty ::= ID:n
 
 TyFields ::= 
           {: RESULT = NIL; :}
-          | ID:n COLON TyFields:t
-          {: RESULT = new Absyn.FieldList(nleft, sym(n), t); :}
+          | ID:n COLON ID:t TyFields:f
+          {: RESULT = new Absyn.FieldList(nleft, sym(n), sym(t), this); :}
   ;
 
 Dec ::= tydec

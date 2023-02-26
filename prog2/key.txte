@@ -1,0 +1,8 @@
+
+/classes/cs4351/cs435180/CSC4351/prog2/test.tig Baumgartner's key
+/classes/cs4351/cs435180/CSC4351/prog2/test.tig::1.5: Syntax error (2)
+OpExp(
+ EQ,
+ SeqExp(
+  ExpList()),
+ IntExp(1))
