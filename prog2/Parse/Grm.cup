@@ -32,14 +32,17 @@ terminal Integer INT;
 terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK, 
 	LBRACE, RBRACE, DOT, PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, LT, LE, 
 	GT, GE, AND, OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO,
-	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE, UMINUS, TYPEDEF;
+	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, UMINUS, TYPEDEF;
 
 /* add more non terminal grammar definitions to make it less ambiguous */
 non terminal Absyn.Exp          Exp;
+non terminal Absyn.Exp          If;
+non terminal Absyn.Exp          Rest;
 non terminal Absyn.Var          Var;
 non terminal Absyn.Ty           Ty;
 non terminal Absyn.Ty           TyFields;
 non terminal Absyn.Dec          Dec;
+non terminal Absyn.Dec          decs;
 non terminal Absyn.Dec          tydec;
 non terminal Absyn.Dec          vardec;
 non terminal Absyn.Dec          fundec;
@@ -90,14 +93,28 @@ Exp ::= error:e
         {: Result = new Absyn.WhileExp(wleft, exp1, exp2); :}
       | ID:n LBRACE Exp:exp1 RBRACE OF Exp:exp2
         {: RESULT = new Absyn.ArrayExp(nleft, sym(n), exp1, exp2); :}
-      | BREAK:b IN ARRAY:a OR WHILE:w 
+      | BREAK:b SEMICOLON
         {: RESULT = new Absyn.BreakExp(bleft); :}
-      | Var:l ASSIGN Exp:eleft
-        {: Result = new Absyn.AssignExp(lleft, l, exp); :}
-      | FOR:f ID:n ASSIGN Exp:exp1 to Exp:exp2 DO Exp:exp3
-        {: RESULT = new Absyn.ForExp(fleft, new Absyn.VarDec(nleft, sym(n), f, exp1), exp1, exp2); :}
-      | 
+      | FOR:f Exp:exp1 TO Exp:exp2 DO Exp:exp3
+        {: RESULT = new Absyn.ForExp(fleft, exp1, exp2, exp3); 
+        /* exp1 is either 
+        ID:type-id ID:id ASSIGN Exp:e
+        or
+        ID:id ASSIGN Exp:e
+        */ :}
+      | FOR:f vardec:v TO Exp:exp2 DO Exp:exp3
+        {: RESULT = new Absyn.ForExp(fleft, v, exp2, exp3); :}
+      | LET:l decs:d IN Exp:b END
+        {: RESULT = new Absyn.LetExp(lleft, d, b); :}
+      | If
 	;
+
+If ::= IF Exp:t THEN Exp:b
+        {: RESULT = new Absyn.IfExp(tleft, t, b); 
+        /* still need to fix S/R conflict */ :}
+      | IF Exp:t THEN Exp:b ELSE Exp:e
+        {: RESULT = new Absyn.IfExp(tleft, t, b, e); /* is this ambiguous? */:}
+  ;
 
 Var ::= ID:n
 	      {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
@@ -107,37 +124,37 @@ Var ::= ID:n
         {: RESULT = new Absyn.FieldVar(vleft, v, sym(f)); :}
 	;
 
+/* Var and Ty both can have ID's. Need to decipher between the two */
 Ty ::= ID:n
      {: RESULT = new Absyn.NameTy(nleft, sym(n)); :}
      | ARRAY: arr OF ID:n
      {: RESULT = new Absyn.ArrayTy(nleft, sym(n)); :}
-     | LBRACE Tyfields:f RBRACE
+     | LBRACE TyFields:f RBRACE
      {: RESULT = new Absyn.RecordTy(lleft, sym(f)); :}
   ;
 
 TyFields ::= 
-          {: RESULT = NIL; :}
+          {: RESULT = new Absyn.NilExp(0); :} 
           | ID:n COLON ID:t TyFields:f
-          {: RESULT = new Absyn.FieldList(nleft, sym(n), sym(t), this); :}
-  ;
+          {: RESULT = new Absyn.FieldList(nleft, sym(n), sym(t), f); :}
+  ; /* fix nil */
 
 Dec ::= tydec
       | vardec
       | fundec
   ;
 
-tydec ::= TYPEDEF ty:t ID:n
-          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, null); :}
+tydec ::= TYPEDEF Ty:t ID:n
+          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, null); :} // what is next TypeDec?
   ;
 
 vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
-         | VAR ID:n COLON NameTy:t ASSIGN Exp:i
+         | VAR ID:n COLON Ty:t ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
   ;
 
-fundec ::= FUNCTION ID:n LPAREN TyFields:f RPAREN ASSIGN Exp:exp
-          {: RESULT = new Absyn.FunctionDec(fleft, n, f, null, exp); :}
-          | FUNCTION ID:n LPAREN TyFields:f RPAREN COLON typedec:t ASSIGN Exp:exp
-          {:RESULT = new Absyn.FunctionDec(fleft, sym(n), f, null, exp); :}
+fundec ::= 
   ;
+
+
