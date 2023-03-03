@@ -44,3 +44,6 @@ ForExp --> for id := exp to exp do exp
          | for var id := exp to exp do exp
 
 typedef array of int type-id
+
+tydecs --> tydec tydecs // how do we transfer over?
+         |
