@@ -9,7 +9,7 @@ parser code  {:
   Lexer lexer;
 
   public void syntax_error(java_cup.runtime.Symbol current) {
-   report_error("Syntax error (" + current.sym + ")", current);
+   report_error("Syntax error (" + (char)current.sym + ")", current);
   }
 
   ErrorMsg.ErrorMsg errorMsg;
@@ -54,8 +54,6 @@ non terminal Absyn.TypeDec      tydecs;
 non terminal Absyn.TypeDec      tydec;
 non terminal Absyn.FunctionDec  fundec;
 non terminal Absyn.FunctionDec  fundecs;
-non terminal Absyn.Dec          fdec;
-non terminal Absyn.Dec          fdef;
 
 /* Precedences */
 precedence nonassoc ASSIGN;
@@ -126,6 +124,8 @@ Exp ::= error:e
 
 ExpListH ::= ID:n LPAREN Exp:i ExpList:t RPAREN
               {: RESULT = new Absyn.FieldExpList(nleft, sym(n), i, t); :}
+           | ID:n LPAREN RPAREN
+              {: RESULT = new Absyn.FieldExpList(nleft, sym(n), null, null); :}
   ;
 
 /* separated by commas (used for param values of a func) */
@@ -161,8 +161,9 @@ If ::= IF Exp:t THEN Exp:b
 
 Var ::= ID:n
 	      {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
-      | Var:v LBRACK Exp:i RBRACK
-        {: RESULT = new Absyn.SubscriptVar(vleft, v, i); :}
+      | ID:v LBRACK Exp:i RBRACK
+        {: RESULT = new Absyn.SubscriptVar(vleft, new Absyn.SimpleVar(vleft, sym(v)), i); 
+        /* TODO: see if this works later */ :}
       | Var:v DOT ID:f
         {: RESULT = new Absyn.FieldVar(vleft, v, sym(f)); :}
 	;
@@ -182,14 +183,21 @@ TyFields ::=
             {: RESULT = new Absyn.FieldList(nleft, sym(n), sym(t), f); :}
   ; 
 
-decs ::= Dec decs
+decs ::= Dec:h decs:t
+        {: RESULT = new Absyn.DecList(h, t); :}
        |
         {: RESULT = null; :}
   ;
 
-Dec ::= vardec
+Dec ::= vardec:vd
       | tydecs
       | fundecs
+  ;
+
+vardec ::= VAR ID:n ASSIGN Exp:i
+          {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
+         | VAR ID:n COLON NameTy:t ASSIGN Exp:i
+          {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
   ;
 
 tydecs ::= tydec
@@ -199,12 +207,6 @@ tydecs ::= tydec
 
 tydec ::= TYPEDEF Ty:t ID:n tydecs:next
           {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, next); :}
-  ;
-
-vardec ::= VAR ID:n ASSIGN Exp:i
-          {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
-         | VAR ID:n COLON NameTy:t ASSIGN Exp:i
-          {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
   ;
 
 fundecs ::= fundec
@@ -221,4 +223,3 @@ fundec ::= NameTy:r ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
          | ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
             {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, b, next); :}
   ;
-
