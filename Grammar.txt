@@ -8,7 +8,7 @@ Exp --> Var
       | :=
       | Record, Array, Seq (How do I represent these?)
 
-Var --> ID (LET, IF, WHILE, BREAK, CALL, FOR)
+Var --> ID
       | ID [INT] // subscript; change later
       | ID . ID
 

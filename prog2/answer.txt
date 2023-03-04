@@ -1,8 +1,5 @@
 
 /test.tig your answer
-/test.tig::1.5: Syntax error (2)
-OpExp(
- EQ,
- SeqExp(
-  ExpList()),
- IntExp(1))
+/test.tig::1.10: Syntax error (10)
+SeqExp(
+ ExpList())

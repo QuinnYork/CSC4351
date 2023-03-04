@@ -1,8 +1,5 @@
 
 /classes/cs4351/cs435180/CSC4351/prog2/test.tig your answer
-/classes/cs4351/cs435180/CSC4351/prog2/test.tig::1.5: Syntax error (2)
-OpExp(
- EQ,
- SeqExp(
-  ExpList()),
- IntExp(1))
+/classes/cs4351/cs435180/CSC4351/prog2/test.tig::1.10: Syntax error (10)
+SeqExp(
+ ExpList())
