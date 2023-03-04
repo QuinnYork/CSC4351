@@ -9,7 +9,7 @@ parser code  {:
   Lexer lexer;
 
   public void syntax_error(java_cup.runtime.Symbol current) {
-   report_error("Syntax error (" + (char)current.sym + ")", current);
+   report_error("Syntax error (" + current.sym + " ASCII: " + (char)current.sym + ")", current);
   }
 
   ErrorMsg.ErrorMsg errorMsg;
@@ -38,11 +38,12 @@ terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK,
 non terminal Absyn.Exp          Exp;
 non terminal Absyn.AssignExp    AssignExp;
 non terminal Absyn.Exp          If;
+non terminal Absyn.ExpList      Head;
 non terminal Absyn.ExpList      Rest;
 non terminal Absyn.FieldExpList ExpListH;
 non terminal Absyn.FieldExpList ExpList;
 non terminal Absyn.FieldExpList Tail;
-non terminal Absyn.ExpList      ExpSeq;
+non terminal Absyn.Exp          ExpSeq;
 non terminal Absyn.Var          Var;
 non terminal Absyn.Ty           Ty;
 non terminal Absyn.FieldList    TyFields;
@@ -104,7 +105,7 @@ Exp ::= error:e
         {: RESULT = new Absyn.ArrayExp(nleft, sym(n), exp1, exp2); :}
       | BREAK:b SEMICOLON
         {: RESULT = new Absyn.BreakExp(bleft); :}
-      | LET decs:d IN Exp:b END
+      | LET decs:d IN ExpSeq:b END
         {: RESULT = new Absyn.LetExp(dleft, d, b); :}
       | FOR:f AssignExp:ae TO Exp:exp1 DO Exp:exp2
         {: RESULT = new Absyn.ForExp(fleft, ae, exp1, exp2); 
@@ -117,9 +118,7 @@ Exp ::= error:e
         {: RESULT = new Absyn.ForExp(fleft, v, exp2, exp3); :}
       | If
       | LPAREN ExpSeq:l RPAREN
-        {: RESULT = new Absyn.SeqExp(lleft, l); :}
-      | LPAREN RPAREN
-        {: RESULT = null; :}
+        {: RESULT = l; :}
 	;
 
 ExpListH ::= ID:n LPAREN Exp:i ExpList:t RPAREN
@@ -139,17 +138,19 @@ Tail ::= Exp:h ExpList:t
           {: RESULT = new Absyn.FieldExpList(hleft, null, h, t); :}
   ;
 
-/* seq of exp separated by semicolons */
-ExpSeq ::= Exp:h Rest:t
-           {: RESULT = new Absyn.ExpList(h, t); :}
+/*
+ExpSeq --> Needs an ExpList in grammar to construct SeqExp
+*/
+ExpSeq ::= Rest:l
+          {: RESULT = new Absyn.SeqExp(lleft, l); :}
          |
-           {: RESULT = null; :}
+          {: RESULT = null; :}
   ;
 
-Rest ::= SEMICOLON ExpSeq:e
-         {: RESULT = e; :}
-       |
-        {: RESULT = null; :}
+Rest ::= Exp:h SEMICOLON Rest:t
+        {: RESULT = new Absyn.ExpList(h, t); :}
+       | Exp:end
+        {: RESULT = new Absyn.ExpList(end, null); :}
   ;
 
 If ::= IF Exp:t THEN Exp:b
@@ -190,36 +191,10 @@ decs ::= Dec:h decs:t
   ;
 
 Dec ::= vardec:vd
-      | tydecs
-      | fundecs
   ;
 
 vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
          | VAR ID:n COLON NameTy:t ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
-  ;
-
-tydecs ::= tydec
-        |
-          {: RESULT = null; :}
-  ;
-
-tydec ::= TYPEDEF Ty:t ID:n tydecs:next
-          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, next); :}
-  ;
-
-fundecs ::= fundec
-          |
-            {: RESULT = null; :}
-  ;
-
-fundec ::= NameTy:r ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
-            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, null, next); :}
-         | ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
-            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, null, next); :}
-         | NameTy:r ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
-            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, b, next); :}
-         | ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
-            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, b, next); :}
   ;
