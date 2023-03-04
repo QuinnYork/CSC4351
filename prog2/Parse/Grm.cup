@@ -123,23 +123,6 @@ Exp ::= error:e
         {: RESULT = new Absyn.CallExp(fleft, sym(f), a); :}
 	;
 
-ExpListH ::= ID:n LPAREN Exp:i ExpList:t RPAREN
-              {: RESULT = new Absyn.FieldExpList(nleft, sym(n), i, t); :}
-           | ID:n LPAREN RPAREN
-              {: RESULT = new Absyn.FieldExpList(nleft, sym(n), null, null); :}
-  ;
-
-/* separated by commas (used for param values of a func) */
-ExpList ::= COMMA Tail:t
-            {: RESULT = t; :}
-          |
-            {: RESULT = null; :}
-  ;
-
-Tail ::= Exp:h ExpList:t
-          {: RESULT = new Absyn.FieldExpList(hleft, null, h, t); :}
-  ;
-
 /*
 ExpSeq --> Needs an ExpList in grammar to construct SeqExp
 */
@@ -172,12 +155,16 @@ Var ::= ID:n
 	;
 
 /* Var and Ty both can have ID's. Need to decipher between the two */
-Ty ::= ID:n
-     {: RESULT = new Absyn.NameTy(nleft, sym(n)); :}
+Ty ::= NameTy:nt
+     {: RESULT = nt; :}
      | ARRAY OF ID:n
      {: RESULT = new Absyn.ArrayTy(nleft, sym(n)); :}
      | TyFields:f
      {: RESULT = new Absyn.RecordTy(fleft, f); :}
+  ;
+
+NameTy ::= ID:n
+          {: RESULT = new Absyn.NameTy(nleft, sym(n)); :}
   ;
 
 TyFields ::= 
@@ -206,6 +193,7 @@ vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
   ;
 
+/* nothing below works */
 tydec ::= TYPEDEF Ty:t ID:n
           {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, null); :}
         | TYPEDEF Ty:t ID:n tydecs:next
