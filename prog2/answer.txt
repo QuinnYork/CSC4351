@@ -1,5 +1,3 @@
 
 /test.tig your answer
-/test.tig::1.10: Syntax error (10)
-SeqExp(
- ExpList())
+IntExp(1)

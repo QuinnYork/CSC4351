@@ -1,6 +1,3 @@
 
 /test.tig Baumgartner's key
-ArrayExp(intArray,
- VarExp(
-  SimpleVar(N)),
- IntExp(0))
+IntExp(1)

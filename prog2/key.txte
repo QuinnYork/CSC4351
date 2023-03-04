@@ -1,6 +1,3 @@
 
 /classes/cs4351/cs435180/CSC4351/prog2/test.tig Baumgartner's key
-ArrayExp(intArray,
- VarExp(
-  SimpleVar(N)),
- IntExp(0))
+IntExp(1)

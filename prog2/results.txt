@@ -6,7 +6,3 @@ If no other lines differ than the filename, the test was successful
 ****** DIFFERENT LINES: ( 1 ) NUMBER FILES: ( 1 ) RESULT: ( SUCCESS! ) ******
 
 /test.tig Baumgartner's key                                                                        |  /test.tig your answer
-ArrayExp(intArray,                                                                                 |  /test.tig::1.10: Syntax error (10)
- VarExp(                                                                                           |  SeqExp(
-  SimpleVar(N)),                                                                                   |   ExpList())
- IntExp(0))                                                                                        <

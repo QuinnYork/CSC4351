@@ -36,9 +36,12 @@ terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK,
 
 /* add more non terminal grammar definitions to make it less ambiguous */
 non terminal Absyn.Exp          Exp;
+non terminal Absyn.AssignExp    AssignExp;
 non terminal Absyn.Exp          If;
 non terminal Absyn.ExpList      Rest;
-non terminal Absyn.Exp          ExpList;
+non terminal Absyn.FieldExpList ExpListH;
+non terminal Absyn.FieldExpList ExpList;
+non terminal Absyn.FieldExpList Tail;
 non terminal Absyn.ExpList      ExpSeq;
 non terminal Absyn.Var          Var;
 non terminal Absyn.Ty           Ty;
@@ -103,20 +106,37 @@ Exp ::= error:e
         {: RESULT = new Absyn.ArrayExp(nleft, sym(n), exp1, exp2); :}
       | BREAK:b SEMICOLON
         {: RESULT = new Absyn.BreakExp(bleft); :}
-      | FOR:f Exp:exp1 TO Exp:exp2 DO Exp:exp3
-        {: RESULT = new Absyn.ForExp(fleft, exp1, exp2, exp3); 
+      | LET decs:d IN Exp:b END
+        {: RESULT = new Absyn.LetExp(dleft, d, b); :}
+      | FOR:f AssignExp:ae TO Exp:exp1 DO Exp:exp2
+        {: RESULT = new Absyn.ForExp(fleft, ae, exp1, exp2); 
         /* exp1 is either 
         ID:type-id ID:id ASSIGN Exp:e
         or
         ID:id ASSIGN Exp:e
         */ :}
+      | FOR:f vardec:v TO Exp:exp2 DO Exp:exp3
+        {: RESULT = new Absyn.ForExp(fleft, v, exp2, exp3); :}
       | If
       | LPAREN ExpSeq:l RPAREN
         {: RESULT = new Absyn.SeqExp(lleft, l); :}
+      | LPAREN RPAREN
+        {: RESULT = null; :}
 	;
 
+ExpListH ::= ID:n LPAREN Exp:i ExpList:t RPAREN
+              {: RESULT = new Absyn.FieldExpList(nleft, sym(n), i, t); :}
+  ;
+
 /* separated by commas (used for param values of a func) */
-ExpList ::= 
+ExpList ::= COMMA Tail:t
+            {: RESULT = t; :}
+          |
+            {: RESULT = null; :}
+  ;
+
+Tail ::= Exp:h ExpList:t
+          {: RESULT = new Absyn.FieldExpList(hleft, null, h, t); :}
   ;
 
 /* seq of exp separated by semicolons */
@@ -162,14 +182,14 @@ TyFields ::=
             {: RESULT = new Absyn.FieldList(nleft, sym(n), sym(t), f); :}
   ; 
 
-decs ::=
+decs ::= Dec decs
+       |
         {: RESULT = null; :}
-       | Dec decs
   ;
 
 Dec ::= vardec
       | tydecs
-      | fundec
+      | fundecs
   ;
 
 tydecs ::= tydec
@@ -179,6 +199,7 @@ tydecs ::= tydec
 
 tydec ::= TYPEDEF Ty:t ID:n tydecs:next
           {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, next); :}
+  ;
 
 vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
@@ -186,23 +207,18 @@ vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
   ;
 
-fundec ::= fdec
-         | fdef
+fundecs ::= fundec
+          |
+            {: RESULT = null; :}
   ;
 
-fdec ::= Ty:r ID:n LPAREN TyFields:p RPAREN SEMICOLON fdec:n
-          {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, null, n); :}
-       | ID:n LPAREN TyFields:p RPAREN SEMICOLON fdec:n
-          {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, null, n); :}
-       |
-          {: RESULT = null; :}
-  ;
-
-fdef ::= Ty:r ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fdef:n
-          {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, b, n); :}
-       | ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fdef:n
-          {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, null, b, n); :}
-       |
-          {: RESULT = null; :}
+fundec ::= NameTy:r ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
+            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, null, next); :}
+         | ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
+            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, null, next); :}
+         | NameTy:r ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
+            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, b, next); :}
+         | ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
+            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, b, next); :}
   ;
 
