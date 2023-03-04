@@ -41,7 +41,7 @@ non terminal Absyn.Exp          If;
 non terminal Absyn.ExpList      Head;
 non terminal Absyn.ExpList      Rest;
 non terminal Absyn.FieldExpList ExpListH;
-non terminal Absyn.FieldExpList ExpList;
+non terminal Absyn.ExpList      ExpList;
 non terminal Absyn.FieldExpList Tail;
 non terminal Absyn.Exp          ExpSeq;
 non terminal Absyn.Var          Var;
@@ -119,6 +119,8 @@ Exp ::= error:e
       | If
       | LPAREN ExpSeq:l RPAREN
         {: RESULT = l; :}
+      | ID:f LPAREN ExpList:a RPAREN
+        {: RESULT = new Absyn.CallExp(fleft, sym(f), a); :}
 	;
 
 ExpListH ::= ID:n LPAREN Exp:i ExpList:t RPAREN
@@ -143,14 +145,14 @@ ExpSeq --> Needs an ExpList in grammar to construct SeqExp
 */
 ExpSeq ::= Rest:l
           {: RESULT = new Absyn.SeqExp(lleft, l); :}
-         |
-          {: RESULT = null; :}
   ;
 
 Rest ::= Exp:h SEMICOLON Rest:t
         {: RESULT = new Absyn.ExpList(h, t); :}
        | Exp:end
         {: RESULT = new Absyn.ExpList(end, null); :}
+       |
+        {: RESULT = null; :}
   ;
 
 If ::= IF Exp:t THEN Exp:b
@@ -180,7 +182,7 @@ Ty ::= ID:n
 
 TyFields ::= 
             {: RESULT = null; :}
-          | ID:n COLON ID:t TyFields:f
+           | ID:n COLON ID:t TyFields:f
             {: RESULT = new Absyn.FieldList(nleft, sym(n), sym(t), f); :}
   ; 
 
@@ -191,10 +193,51 @@ decs ::= Dec:h decs:t
   ;
 
 Dec ::= vardec:vd
+        {: RESULT = vd; :}
+      | tydec:td
+        {: RESULT = td; :}
+      | fundec:fd
+        {: RESULT = fd; :}
   ;
 
 vardec ::= VAR ID:n ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), null, i); :}
          | VAR ID:n COLON NameTy:t ASSIGN Exp:i
           {: RESULT = new Absyn.VarDec(nleft, sym(n), t, i); :}
+  ;
+
+tydec ::= TYPEDEF Ty:t ID:n
+          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, null); :}
+        | TYPEDEF Ty:t ID:n tydecs:next
+          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, next); :}
+  ;
+
+tydecs ::= TYPEDEF Ty:t ID:n tydecs:next
+          {: RESULT = new Absyn.TypeDec(tleft, sym(n), t, next); :}
+         |
+          {: RESULT = null; :}
+  ;
+
+fundec ::= NameTy:r ID:n LPAREN TyFields:p RPAREN SEMICOLON
+            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, null, null); :}
+         | ID:n LPAREN TyFields:p RPAREN SEMICOLON
+            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, null, null); :}
+         | NameTy:r ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE
+            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, b, null); :}
+         | ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE
+            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, b, null); :}
+         | fundecs:fds
+            {: RESULT = fds; :}
+  ;
+
+fundecs ::= NameTy:r ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
+            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, null, next); :}
+         | ID:n LPAREN TyFields:p RPAREN SEMICOLON fundecs:next
+            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, null, next); :}
+         | NameTy:r ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
+            {: RESULT = new Absyn.FunctionDec(rleft, sym(n), p, r, b, next); :}
+         | ID:n LPAREN TyFields:p RPAREN LBRACE Exp:b RBRACE fundecs:next
+            {: RESULT = new Absyn.FunctionDec(nleft, sym(n), p, null, b, next); :}
+         |
+            {: RESULT = null; :}
   ;
