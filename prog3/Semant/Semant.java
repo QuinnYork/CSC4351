@@ -186,8 +186,7 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.VarExp e) {
-    return null;
-    // return new ExpTy(null, new Types.NAME());
+    return transVar(e.var);
   }
 
   ExpTy transExp(Absyn.AssignExp e) {
@@ -207,6 +206,7 @@ public class Semant {
 
   ExpTy transExp(Absyn.BreakExp e) {
     return new ExpTy(null, VOID); // check
+    // need to know if we are in a loop or not. throw error if not
   }
 
   ExpTy transExp(Absyn.WhileExp e) {
@@ -239,15 +239,45 @@ public class Semant {
     if (d.typ == null) {
       type = init.ty;
     } else {
-      type = VOID;
-      throw new Error("unimplemented");
-    }
+      // if type is given, we need to look up type in table and make sure
+      // the exp (RHS of :=) can be coerced onto that type
+      type = (Type) env.tenv.get(d.typ.name);
+      if (type == null)
+        throw new Error("type could not be found"); // replace throw with error func later
+      else if (!type.coerceTo(init.ty))
+        throw new Error("types are not compatible");
+      // |||||||
+    } // vvvvvvv FALL THROUGH
     d.entry = new VarEntry(type);
     env.venv.put(d.name, d.entry);
     return null;
   }
 
   Exp transDec(Absyn.TypeDec d) {
+    Type type_;
+    Types.NAME ty;
+    // typedef ty type-id
+    // transTy(ty) returns a type
+    // need to bind ty (new type being made) to the type specified in type-id
+    // if type-id can't be found in table, throw error
+
+    // possibly also need to check that the type isn't NIL
+    Absyn.TypeDec td;
+    for (td = d; td != null; td = td.next) { // loop through each type declaration in a row (>= 1)
+      ty = (Types.NAME) transTy(td.ty); // should we do this?
+      type_ = (Type) env.tenv.get(td.name);
+      if (!td.entry.coerceTo(type_)) // if entry type can't be coerced onto type_, error
+        throw new Error("mismatching types");
+      ty.bind(type_);
+      env.tenv.put(ty.name, ty);
+    }
+    // after adding all types to table, check for a loop within types
+    Types.NAME check;
+    for (td = d; td != null; td = td.next) {
+      check = (Types.NAME) env.tenv.get(td.name);
+      if (check.isLoop())
+        throw new Error("looping error in types");
+    }
     return null;
   }
 
@@ -255,7 +285,7 @@ public class Semant {
     return null;
   }
 
-  Exp transTy(Absyn.Ty t) {
+  Type transTy(Absyn.Ty t) {
     if (t instanceof Absyn.NameTy)
       return transTy((Absyn.NameTy) t);
     else if (t instanceof Absyn.RecordTy)
@@ -265,31 +295,44 @@ public class Semant {
     throw new Error("Semant.transDec");
   }
 
-  Exp transTy(Absyn.NameTy t) {
+  Type transTy(Absyn.NameTy t) {
     return null;
   }
 
-  Exp transTy(Absyn.RecordTy t) {
+  Type transTy(Absyn.RecordTy t) {
     return null;
   }
 
-  Exp transTy(Absyn.ArrayTy t) {
+  Type transTy(Absyn.ArrayTy t) {
     return null;
   }
 
-  Exp transVar(Absyn.Var v) {
+  ExpTy transVar(Absyn.Var v) {
+    if (v instanceof Absyn.SimpleVar)
+      return transVar((Absyn.SimpleVar) v);
+    else if (v instanceof Absyn.FieldVar)
+      return transVar((Absyn.FieldVar) v);
+    else if (v instanceof Absyn.SubscriptVar)
+      return transVar((Absyn.SubscriptVar) v);
+    throw new Error("Semant.transVar");
+  }
+
+  ExpTy transVar(Absyn.SimpleVar v) {
+    Entry x = (Entry) env.venv.get(v.name);
+    if (x instanceof VarEntry) {
+      VarEntry ent = (VarEntry) x;
+      return new ExpTy(null, ent.ty);
+    } else {
+      error(v.pos, "variable is unrecognized");
+      return new ExpTy(null, INT);
+    }
+  }
+
+  ExpTy transVar(Absyn.FieldVar v) {
     return null;
   }
 
-  Exp transVar(Absyn.SimpleVar v) {
-    return null;
-  }
-
-  Exp transVar(Absyn.FieldVar v) {
-    return null;
-  }
-
-  Exp transVar(Absyn.SubscriptVar v) {
+  ExpTy transVar(Absyn.SubscriptVar v) {
     return null;
   }
 
