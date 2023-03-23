@@ -52,6 +52,8 @@ public class Semant {
 
   ExpTy transExp(Absyn.Exp e) {
     ExpTy result;
+    if (e != null)
+      System.out.println(e.getClass());
 
     if (e == null)
       return new ExpTy(null, VOID);
@@ -161,7 +163,7 @@ public class Semant {
       ty = transExp(l.head);
     }
     if (ty == null)
-      error(e.pos, "empty sequence of exp");
+      ty = new ExpTy(null, VOID);
 
     return ty; // return type of last expression in sequence (error if ty == null)
   }
@@ -218,8 +220,12 @@ public class Semant {
     return null;
   }
 
-  ExpTy transExp(Absyn.CallExp e) {
-    return null;
+  ExpTy transExp(Absyn.CallExp e) { // function call expression
+    // could potentially be calling a function inside of another function so
+    // we should check the table and see if the function name is declared
+    if (env.venv.get(e.func) == null) // not in table
+      error(e.pos, "function " + e.func + " was not declared");
+    return new ExpTy(null, e.type);
   }
 
   ExpTy transExp(Absyn.ForExp e) {
@@ -257,38 +263,80 @@ public class Semant {
   }
 
   Exp transDec(Absyn.TypeDec d) {
-    Type type_;
     Types.NAME ty;
-    // typedef ty type-id
-    // transTy(ty) returns a type
-    // need to bind ty (new type being made) to the type specified in type-id
-    // if type-id can't be found in table, throw error
+    Type bind_;
 
     // possibly also need to check that the type isn't NIL
     Absyn.TypeDec td;
-    System.out.println(d.entry);
-    for (td = d; td != null; td = td.next) { // loop through each type declaration in a row (>= 1)
-      ty = (Types.NAME) transTy(td.ty); // should we do this?
-      type_ = (Type) env.tenv.get(td.name);
-      System.out.println(td.name);
-      if (!td.entry.coerceTo(type_)) // if entry type can't be coerced onto type_, error
-        throw new Error("mismatching types");
-      ty.bind(type_);
+    for (td = d; td != null; td = td.next) { // enter types into table and check for redeclarations
+      bind_ = transTy(td.ty);
+      ty = new Types.NAME(td.name);
+      if (env.tenv.get(ty.name) != null)
+        error(td.pos, "type can not be redeclared");
       env.tenv.put(ty.name, ty);
     }
+
+    for (td = d; td != null; td = td.next) { // loop through each type declaration in a row (>= 1)
+      // bind type-id to the type of ty (typedef ty type-id)
+      bind_ = transTy(td.ty);
+      ty = (Types.NAME) env.tenv.get(td.name);
+      ty.bind(bind_);
+      td.entry = ty;
+    }
+
     // after adding all types to table, check for a loop within types
     Types.NAME check;
     for (td = d; td != null; td = td.next) {
       check = (Types.NAME) env.tenv.get(td.name);
       if (check.isLoop())
-        throw new Error("looping error in types");
+        error(td.pos, "looping error in type declarations");
     }
     return null;
   }
 
-  Exp transDec(Absyn.FunctionDec d) { // TODO
+  Exp transDec(Absyn.FunctionDec d) {
+    // do we have to type check the return value of the body with the result type?
+    // do we have to parse the body of the function and if it recursively calls a
+    // function,
+    // check to make sure the function called was defined in the same place as the
+    // caller?
+    Absyn.FunctionDec fd;
+    boolean body;
+    for (fd = d; fd != null; fd = fd.next) { // add functions to table and type-check bodies
+      FunEntry f = (FunEntry) env.venv.get(fd.name);
+      System.out.println("name of function: " + fd.name.toString());
+      if (f != null)
+        System.out.println(" has a body: " + f.hasBody);
+      if (f != null &&
+          (f.hasBody || (!f.hasBody && fd.body == null)))
+        error(fd.pos, "multiple functions of the same name cannot be declared");
+      Type result = transTy(d.result); // gets return type of function
+      Types.RECORD fields = transTypeFields(d.params);
+      body = (fd.body != null);
+      env.venv.put(d.name, new FunEntry(fields, result, body));
+      Type ret = transExp(d.body).ty; // does this return the last expression in the function, aka the result?
+      if (!ret.coerceTo(result))
+        error(d.pos, "return type is different from function result needed");
+    }
+
+    for (fd = d; fd != null; fd = fd.next) { // add all params to scope and check if a func doesn't have a body
+      if (!(env.venv.get(fd.name) instanceof FunEntry))
+        error(fd.pos, "not a function entry in table");
+      FunEntry fe = (FunEntry) env.venv.get(fd.name);
+      if (!fe.hasBody)
+        error(fd.pos, "function \"" + fd.name.toString() + "\" was not defined");
+      fd.entry = fe;
+      env.venv.beginScope();
+      for (Absyn.FieldList param = d.params; param != null; param = param.tail)
+        env.venv.put(param.name, new VarEntry((Type) env.venv.get(param.typ)));
+      env.venv.endScope();
+    }
     return null;
   }
+
+  // private ExpTy transFields(Absyn.FieldList f) {
+  // return null;
+  // }
 
   Type transTy(Absyn.Ty t) {
     if (t instanceof Absyn.NameTy)
@@ -303,8 +351,10 @@ public class Semant {
   Type transTy(Absyn.NameTy t) { // do we only use Ty's when declaring a type?
     Types.NAME type;
     type = (Types.NAME) env.tenv.get(t.name); // gets Name Type from table
-    if (type == null)// not declared yet
+    if (type == null) {// not declared yet
+      error(t.pos, "type was not declared");
       type = new Types.NAME(t.name);
+    }
     return type;
   }
 
@@ -379,7 +429,7 @@ public class Semant {
   ExpTy transVar(Absyn.SubscriptVar v) { // a[x], return type of subscript (instead of an ARRAY type with a type field)
     // make sure variable is in table
     // return type of variable
-    // TODO: should we be able to know what type a[x] would return and in turn check
+    // should we be able to know what type a[x] would return and in turn check
     // it with the type of a?
     // Also do we check if x is in bounds of the array?
     return transVar(v.var);
