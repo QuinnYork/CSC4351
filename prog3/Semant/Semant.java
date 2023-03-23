@@ -197,7 +197,12 @@ public class Semant {
     // do we actually change the values in the environment for this project?
     // if var type and exp type can be coerced to each other, return. else throw
     // error
-    return new ExpTy(null, e.exp.type); // should e be null for construction?
+    ExpTy type = transVar(e.var);
+    Type etype = e.type;
+    if (!etype.coerceTo(type.ty))
+      throw new Error("incompatible types");
+    return new ExpTy(null, e.exp.type); // shouldn't have to bind the type since it isn't a VarDec
+    // Only throw error for incompatible types
   }
 
   ExpTy transExp(Absyn.IfExp e) {
@@ -232,8 +237,6 @@ public class Semant {
   }
 
   Exp transDec(Absyn.VarDec d) {
-    // NOTE: THIS IMPLEMENTATION IS INCOMPLETE
-    // It is here to show you the general form of the transDec methods
     ExpTy init = transExp(d.init);
     Type type;
     if (d.typ == null) {
@@ -263,9 +266,11 @@ public class Semant {
 
     // possibly also need to check that the type isn't NIL
     Absyn.TypeDec td;
+    System.out.println(d.entry);
     for (td = d; td != null; td = td.next) { // loop through each type declaration in a row (>= 1)
       ty = (Types.NAME) transTy(td.ty); // should we do this?
       type_ = (Type) env.tenv.get(td.name);
+      System.out.println(td.name);
       if (!td.entry.coerceTo(type_)) // if entry type can't be coerced onto type_, error
         throw new Error("mismatching types");
       ty.bind(type_);
@@ -281,7 +286,7 @@ public class Semant {
     return null;
   }
 
-  Exp transDec(Absyn.FunctionDec d) {
+  Exp transDec(Absyn.FunctionDec d) { // TODO
     return null;
   }
 
@@ -295,16 +300,45 @@ public class Semant {
     throw new Error("Semant.transDec");
   }
 
-  Type transTy(Absyn.NameTy t) {
-    return null;
+  Type transTy(Absyn.NameTy t) { // do we only use Ty's when declaring a type?
+    Types.NAME type;
+    type = (Types.NAME) env.tenv.get(t.name); // gets Name Type from table
+    if (type == null)// not declared yet
+      type = new Types.NAME(t.name);
+    return type;
   }
 
   Type transTy(Absyn.RecordTy t) {
-    return null;
+    /*
+     * Go through each symbol in field list and create it's type
+     * as a record type. First one will be the head then use
+     * field list's tail field to get the next record.
+     * Keep looping through each field until null
+     * Add on the next field to the previous one when
+     * constructing the RECORD type
+     * Will have to use recursion so we can wait until tail is null
+     * and then construct each Types.RECORD before the previous
+     * Types.RECORD
+     */
+    return transTypeFields(t.fields);
+  }
+
+  private Types.RECORD transTypeFields(Absyn.FieldList f) {
+    Types.RECORD rec;
+    if (f == null) { // base case
+      return null;
+    }
+    Type type = (Type) env.tenv.get(f.typ);
+    rec = new Types.RECORD(f.name, type, transTypeFields(f.tail));
+    return rec;
   }
 
   Type transTy(Absyn.ArrayTy t) {
-    return null;
+    Type type;
+    type = (Type) env.tenv.get(t.typ); // gets type from table
+    if (type == null)// not declared yet
+      throw new Error("type doesn't exist");
+    return new Types.ARRAY(type);
   }
 
   ExpTy transVar(Absyn.Var v) {
@@ -328,12 +362,27 @@ public class Semant {
     }
   }
 
-  ExpTy transVar(Absyn.FieldVar v) {
-    return null;
+  ExpTy transVar(Absyn.FieldVar v) { // a.x, return type of x
+    Type type = transVar(v.var).ty; // get type of variable that is calling a field
+    // check if type is a RECORD. if it's not, throw error (can only reference a
+    // field if variable is a record type)
+    if (type instanceof Types.RECORD) {
+      // get type of field
+      type = (Type) env.tenv.get(v.field);
+      return new ExpTy(null, type);
+    } else {
+      error(v.pos, "can't access a field of a non-record type");
+      return new ExpTy(null, INT); // type of anything, doesn't matter
+    }
   }
 
-  ExpTy transVar(Absyn.SubscriptVar v) {
-    return null;
+  ExpTy transVar(Absyn.SubscriptVar v) { // a[x], return type of subscript (instead of an ARRAY type with a type field)
+    // make sure variable is in table
+    // return type of variable
+    // TODO: should we be able to know what type a[x] would return and in turn check
+    // it with the type of a?
+    // Also do we check if x is in bounds of the array?
+    return transVar(v.var);
   }
 
   // Exp transVar(Absyn.Var v) { might need this method. ref implementation has 5
