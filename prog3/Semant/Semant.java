@@ -39,9 +39,9 @@ public class Semant {
 
   // check that left and right are the same type
   private boolean checkComparable(ExpTy left, ExpTy right, int pos) {
-    if (!left.ty.coerceTo(right.ty))
+    if (!left.ty.coerceTo(right.ty)) {
       error(pos, "not equal types");
-    else if (left.ty == NIL || right.ty == NIL)
+    } else if (left.ty == NIL || right.ty == NIL)
       error(pos, "can not compare to nil");
     return true;
   }
@@ -52,7 +52,7 @@ public class Semant {
         (STRING.coerceTo(left.ty) && STRING.coerceTo(right.ty))) {
       return true;
     }
-    error(pos, "not equal types");
+    error(pos, "not int or string types");
     return false;
   }
 
@@ -176,7 +176,8 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.ArrayExp e) {
-    return new ExpTy(null, new Types.ARRAY(e.init.type));
+    Type t = (Type) env.tenv.get(e.typ);
+    return new ExpTy(null, new Types.ARRAY(t));
   }
 
   ExpTy transExp(Absyn.NilExp e) {
@@ -202,7 +203,21 @@ public class Semant {
     // do we actually change the values in the environment for this project?
     // if var type and exp type can be coerced to each other, return. else throw
     // error
-    VarEntry ve = (VarEntry) env.venv.get(((Absyn.SimpleVar) e.var).name);
+    VarEntry ve = null;
+
+    if (e.var instanceof Absyn.SimpleVar) {
+      Absyn.SimpleVar v = (Absyn.SimpleVar) e.var;
+      ve = (VarEntry) env.venv.get(v.name);
+    } else if (e.var instanceof Absyn.SubscriptVar) {
+      Absyn.SubscriptVar v = (Absyn.SubscriptVar) e.var;
+      Absyn.SimpleVar v1 = (Absyn.SimpleVar) v.var;
+      ve = (VarEntry) env.venv.get(v1.name);
+    } else if (e.var instanceof Absyn.FieldVar) {
+      Absyn.FieldVar v = (Absyn.FieldVar) e.var;
+      Absyn.SimpleVar v1 = (Absyn.SimpleVar) v.var;
+      ve = (VarEntry) env.venv.get(v1.name);
+    }
+
     if (ve != null && ve instanceof LoopVarEntry)
       error(e.pos, "loop variable can not be redeclared inside of loop"); // scope ends after loop ends so there
                                                                           // shouldn't be an instance of a LoopVarEntry
@@ -288,7 +303,7 @@ public class Semant {
       checkInt(assign_type, ae.pos);
       lve = new LoopVarEntry(assign_type.ty);
       env.venv.put(((Absyn.SimpleVar) ae.var).name, lve);
-    } else if (e.var instanceof Absyn.VarExp)
+    } else if (e.var instanceof Absyn.VarDec)
       transLoopVarDec((Absyn.VarDec) e.var);
     else {
       error(e.var.pos, "variable initialization missing");
@@ -302,11 +317,11 @@ public class Semant {
     // throw an error
     Type t = transExp(e.body).ty;
     if (!t.coerceTo(VOID))
-      error(e.body.pos, "body of loop can not return a result");
+      error(e.body.pos, "body of loop can not return a result of type: " + t);
     env.venv.endScope();
     inLoop = false;
-    if (!e.type.coerceTo(VOID))
-      error(e.body.pos, "loop can not return a result");
+    if (!t.coerceTo(VOID))
+      error(e.body.pos, "loop can not return a result of type: " + t);
     return new ExpTy(null, t);
   }
 
@@ -412,7 +427,6 @@ public class Semant {
     for (fd = d; fd != null; fd = fd.next) { // add functions to table and type-check bodies
       FunEntry f = (FunEntry) env.venv.get(fd.name);
       fd.entry = f;
-      System.out.println("\nfunction \"" + fd.name + "\" is being declared/defined:");
       if (f != null &&
           (f.hasBody || (!f.hasBody && fd.body == null)))
         error(fd.pos, "multiple functions of the same name cannot be declared");
@@ -424,13 +438,10 @@ public class Semant {
       env.venv.put(fd.name, fe);
       env.venv.beginScope();
       for (Absyn.FieldList param = fd.params; param != null; param = param.tail) {
-        System.out.println("parameter \"" + param.name + "\" is being entered into table with type " + param.typ);
         VarEntry ve = new VarEntry((Type) env.tenv.get(param.typ));
         env.venv.put(param.name, ve);
       }
-      System.out.println("translating function body of \"" + fd.name + "\"...");
       ExpTy ret = transExp(fd.body);
-      System.out.println("return type of body was: \"" + ret.ty + "\"");
       if (!ret.ty.coerceTo(result))
         error(fd.pos, "return type is different from function result needed");
       env.venv.endScope();
@@ -494,6 +505,19 @@ public class Semant {
   Type transTy(Absyn.ArrayTy t) {
     Type type;
     type = (Type) env.tenv.get(t.typ); // gets type from table
+    while (type instanceof Types.ARRAY || type instanceof Types.NAME || type instanceof Types.RECORD) {
+      if (type instanceof Types.ARRAY) {
+        Types.ARRAY a = (Types.ARRAY) type;
+        type = a.element;
+      } else if (type instanceof Types.NAME) {
+        Types.NAME a = (Types.NAME) type;
+        type = a.actual();
+      } else {
+        Types.RECORD a = (Types.RECORD) type;
+        type = a.actual();
+      }
+
+    }
     if (type == null)// not declared yet
       throw new Error("type doesn't exist");
     return new Types.ARRAY(type);
@@ -555,7 +579,11 @@ public class Semant {
     Type type = transExp(v.index).ty;
     if (!type.coerceTo(INT))
       error(v.index.pos, "index of array has to be of type int");
-    return transVar(v.var);
+    Types.ARRAY ty = (Types.ARRAY) transVar(v.var).ty;
+    Absyn.SimpleVar sv = (Absyn.SimpleVar) v.var;
+    VarEntry ve = (VarEntry) env.venv.get(sv.name);
+    ty = (Types.ARRAY) ve.ty;
+    return new ExpTy(null, ty.element);
   }
 
   // Exp transVar(Absyn.Var v) { might need this method. ref implementation has 5
