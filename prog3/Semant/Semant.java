@@ -99,8 +99,6 @@ public class Semant {
   ExpTy transExp(Absyn.OpExp e) {
     ExpTy left = transExp(e.left);
     ExpTy right = transExp(e.right);
-    System.out
-        .println("\nleft: " + left.ty.actual() + " right: " + right.ty.actual() + " using operator: " + e.oper + "\n");
 
     switch (e.oper) {
       case Absyn.OpExp.PLUS:
@@ -219,21 +217,17 @@ public class Semant {
 
   ExpTy transExp(Absyn.IfExp e) {
     Type t = transExp(e.test).ty;
-    System.out.println("Condition test resulted in a type of: " + t);
     if (!t.coerceTo(INT))
       error(e.pos, "condition test can not return a non-Integer");
     t = transExp(e.thenclause).ty;
-    System.out.println("Then clause resulted in a type of: " + t);
     if (e.elseclause == null && !t.coerceTo(VOID)) // no else, then should not return a result
       error(e.pos, "then without an else can not return a result");
     else if (e.elseclause != null) {
       Type else_type = transExp(e.elseclause).ty;
-      System.out.println("Else clause resulted in a type of: " + t);
       if (!else_type.coerceTo(t))
         error(e.elseclause.pos, "then and else clause have to have same result");
       return new ExpTy(null, else_type);
     }
-    System.out.println("Overall type is listed as: " + e.type);
     return new ExpTy(null, t);
   }
 
@@ -256,13 +250,13 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.CallExp e) { // function call expression
-    System.out.println(e.func + " was called with a return type of: " + e.type);
     ExpTy arg_type;
-    Types.RECORD field = ((FunEntry) env.venv.get(e.func)).formals;
+    FunEntry func = (FunEntry) env.venv.get(e.func);
     // could potentially be calling a function inside of another function so
     // we should check the table and see if the function name is declared
-    if (env.venv.get(e.func) == null) // not in table
+    if (func == null) // not in table
       error(e.pos, "function " + e.func + " was not declared");
+    Types.RECORD field = func.formals;
     for (Absyn.ExpList el = e.args; el != null; el = el.tail) {
       if (field == null) {
         error(e.pos, "count on params vs args is not equal");
@@ -275,9 +269,8 @@ public class Semant {
     }
     if (field != null)
       error(e.pos, "count on params vs args is not equal");
-    if (e.type == null)
-      return new ExpTy(null, VOID);
-    return new ExpTy(null, e.type);
+
+    return new ExpTy(null, func.result);
   }
 
   private ExpTy transArgs(Absyn.Exp e) {
