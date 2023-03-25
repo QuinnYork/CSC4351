@@ -27,6 +27,10 @@ public class Semant {
   static final Types.STRING STRING = new Types.STRING();
   static final Types.NIL NIL = new Types.NIL();
 
+  // static boolean that will only change to true if inside of a loop and once
+  // body is translated, boolean will be false again
+  static boolean inLoop = false;
+
   private Exp checkInt(ExpTy et, int pos) {
     if (!INT.coerceTo(et.ty))
       error(pos, "integer required");
@@ -37,6 +41,8 @@ public class Semant {
   private boolean checkComparable(ExpTy left, ExpTy right, int pos) {
     if (!left.ty.coerceTo(right.ty))
       error(pos, "not equal types");
+    else if (left.ty == NIL || right.ty == NIL)
+      error(pos, "can not compare to nil");
     return true;
   }
 
@@ -52,9 +58,6 @@ public class Semant {
 
   ExpTy transExp(Absyn.Exp e) {
     ExpTy result;
-    if (e != null)
-      System.out.println(e.getClass());
-
     if (e == null)
       return new ExpTy(null, VOID);
     else if (e instanceof Absyn.OpExp)
@@ -96,6 +99,8 @@ public class Semant {
   ExpTy transExp(Absyn.OpExp e) {
     ExpTy left = transExp(e.left);
     ExpTy right = transExp(e.right);
+    System.out
+        .println("\nleft: " + left.ty.actual() + " right: " + right.ty.actual() + " using operator: " + e.oper + "\n");
 
     switch (e.oper) {
       case Absyn.OpExp.PLUS:
@@ -116,7 +121,7 @@ public class Semant {
         return new ExpTy(null, INT);
       case Absyn.OpExp.EQ:
         checkComparable(left, right, e.left.pos);
-        return new ExpTy(null, left.ty.actual()); // ty.actual()?
+        return new ExpTy(null, left.ty.actual());
       case Absyn.OpExp.NE:
         checkComparable(left, right, e.left.pos);
         return new ExpTy(null, left.ty.actual());
@@ -199,36 +204,138 @@ public class Semant {
     // do we actually change the values in the environment for this project?
     // if var type and exp type can be coerced to each other, return. else throw
     // error
+    VarEntry ve = (VarEntry) env.venv.get(((Absyn.SimpleVar) e.var).name);
+    if (ve != null && ve instanceof LoopVarEntry)
+      error(e.pos, "loop variable can not be redeclared inside of loop"); // scope ends after loop ends so there
+                                                                          // shouldn't be an instance of a LoopVarEntry
+                                                                          // outside of a loop
     ExpTy type = transVar(e.var);
-    Type etype = e.type;
-    if (!etype.coerceTo(type.ty))
-      throw new Error("incompatible types");
-    return new ExpTy(null, e.exp.type); // shouldn't have to bind the type since it isn't a VarDec
+    ExpTy etype = transExp(e.exp);
+    if (!etype.ty.coerceTo(type.ty))
+      error(e.pos, "incompatible types");
+    return etype; // shouldn't have to bind the type since it isn't a VarDec
     // Only throw error for incompatible types
   }
 
   ExpTy transExp(Absyn.IfExp e) {
-    return null;
+    Type t = transExp(e.test).ty;
+    System.out.println("Condition test resulted in a type of: " + t);
+    if (!t.coerceTo(INT))
+      error(e.pos, "condition test can not return a non-Integer");
+    t = transExp(e.thenclause).ty;
+    System.out.println("Then clause resulted in a type of: " + t);
+    if (e.elseclause == null && !t.coerceTo(VOID)) // no else, then should not return a result
+      error(e.pos, "then without an else can not return a result");
+    else if (e.elseclause != null) {
+      Type else_type = transExp(e.elseclause).ty;
+      System.out.println("Else clause resulted in a type of: " + t);
+      if (!else_type.coerceTo(t))
+        error(e.elseclause.pos, "then and else clause have to have same result");
+      return new ExpTy(null, else_type);
+    }
+    System.out.println("Overall type is listed as: " + e.type);
+    return new ExpTy(null, t);
   }
 
   ExpTy transExp(Absyn.BreakExp e) {
-    return new ExpTy(null, VOID); // check
-    // need to know if we are in a loop or not. throw error if not
+    if (inLoop == false)
+      error(e.pos, "not inside of loop, break is invalid here");
+    return new ExpTy(null, VOID);
   }
 
   ExpTy transExp(Absyn.WhileExp e) {
-    return null;
+    Type t = transExp(e.test).ty;
+    if (!t.coerceTo(INT))
+      error(e.test.pos, "condition test can not return a non-Integer");
+    inLoop = true;
+    t = transExp(e.body).ty;
+    if (!t.coerceTo(VOID))
+      error(e.body.pos, "body can not return a value");
+    inLoop = false;
+    return new ExpTy(null, t);
   }
 
   ExpTy transExp(Absyn.CallExp e) { // function call expression
+    System.out.println(e.func + " was called with a return type of: " + e.type);
+    ExpTy arg_type;
+    Types.RECORD field = ((FunEntry) env.venv.get(e.func)).formals;
     // could potentially be calling a function inside of another function so
     // we should check the table and see if the function name is declared
     if (env.venv.get(e.func) == null) // not in table
       error(e.pos, "function " + e.func + " was not declared");
+    for (Absyn.ExpList el = e.args; el != null; el = el.tail) {
+      if (field == null) {
+        error(e.pos, "count on params vs args is not equal");
+        break;
+      }
+      arg_type = transArgs(el.head);
+      if (!arg_type.ty.coerceTo(field.fieldType))
+        error(e.pos, "mismatched type: " + arg_type.ty + " cannot be coerced to -> " + field.fieldType);
+      field = field.tail;
+    }
+    if (field != null)
+      error(e.pos, "count on params vs args is not equal");
+    if (e.type == null)
+      return new ExpTy(null, VOID);
     return new ExpTy(null, e.type);
   }
 
+  private ExpTy transArgs(Absyn.Exp e) {
+    return transExp(e);
+  }
+
   ExpTy transExp(Absyn.ForExp e) {
+    // when initializing loop variable, create a LoopVarEntry for it so if inside of
+    // the for loop the var is redeclared, report an error
+    LoopVarEntry lve;
+    env.venv.beginScope();
+    if (e.var instanceof Absyn.AssignExp) {
+      Absyn.AssignExp ae = (Absyn.AssignExp) e.var;
+      ExpTy assign_type = transExp(ae);
+      checkInt(assign_type, ae.pos);
+      lve = new LoopVarEntry(assign_type.ty);
+      env.venv.put(((Absyn.SimpleVar) ae.var).name, lve);
+    } else if (e.var instanceof Absyn.VarExp)
+      transLoopVarDec((Absyn.VarDec) e.var);
+    else {
+      error(e.var.pos, "variable initialization missing");
+      return null;
+    }
+    // loop var has been translated
+    inLoop = true;
+    transExp(e.hi); // is there limitation on what type this can be?
+    // transBody of loop
+    // if body contains a VarDec or AssignExp and the variable is the loop variable,
+    // throw an error
+    Type t = transExp(e.body).ty;
+    if (!t.coerceTo(VOID))
+      error(e.body.pos, "body of loop can not return a result");
+    env.venv.endScope();
+    inLoop = false;
+    if (!e.type.coerceTo(VOID))
+      error(e.body.pos, "loop can not return a result");
+    return new ExpTy(null, t);
+  }
+
+  private Exp transLoopVarDec(Absyn.VarDec d) {
+    ExpTy init = transExp(d.init);
+    if (init.ty == NIL)
+      error(d.pos, "variable can not be initialized to nil");
+    Type type;
+    if (d.typ == null) {
+      type = init.ty;
+    } else {
+      // if type is given, we need to look up type in table and make sure
+      // the exp (RHS of :=) can be coerced onto that type
+      type = (Type) env.tenv.get(d.typ.name);
+      if (type == null)
+        error(d.pos, "type could not be found"); // replace throw with error func later
+      else if (!type.coerceTo(init.ty))
+        error(d.pos, "types are not compatible");
+      // |||||||
+    } // vvvvvvv FALL THROUGH
+    d.entry = new LoopVarEntry(type);
+    env.venv.put(d.name, d.entry);
     return null;
   }
 
@@ -243,7 +350,14 @@ public class Semant {
   }
 
   Exp transDec(Absyn.VarDec d) {
+    VarEntry ve = (VarEntry) env.venv.get(d.name);
+    if (ve != null && ve instanceof LoopVarEntry)
+      error(d.pos, "loop variable can not be redeclared inside of loop"); // scope ends after loop ends so there
+                                                                          // shouldn't be an instance of a LoopVarEntry
+                                                                          // outside of a loop
     ExpTy init = transExp(d.init);
+    if (init.ty == NIL)
+      error(d.pos, "variable can not be initialized to nil");
     Type type;
     if (d.typ == null) {
       type = init.ty;
@@ -252,9 +366,9 @@ public class Semant {
       // the exp (RHS of :=) can be coerced onto that type
       type = (Type) env.tenv.get(d.typ.name);
       if (type == null)
-        throw new Error("type could not be found"); // replace throw with error func later
+        error(d.pos, "type could not be found"); // replace throw with error func later
       else if (!type.coerceTo(init.ty))
-        throw new Error("types are not compatible");
+        error(d.pos, "types are not compatible");
       // |||||||
     } // vvvvvvv FALL THROUGH
     d.entry = new VarEntry(type);
@@ -304,19 +418,29 @@ public class Semant {
     boolean body;
     for (fd = d; fd != null; fd = fd.next) { // add functions to table and type-check bodies
       FunEntry f = (FunEntry) env.venv.get(fd.name);
-      System.out.println("name of function: " + fd.name.toString());
-      if (f != null)
-        System.out.println(" has a body: " + f.hasBody);
+      fd.entry = f;
+      System.out.println("\nfunction \"" + fd.name + "\" is being declared/defined:");
       if (f != null &&
           (f.hasBody || (!f.hasBody && fd.body == null)))
         error(fd.pos, "multiple functions of the same name cannot be declared");
-      Type result = transTy(d.result); // gets return type of function
-      Types.RECORD fields = transTypeFields(d.params);
+
+      Type result = transTy(fd.result); // gets return type of function
+      Types.RECORD fields = transTypeFields(fd.params);
       body = (fd.body != null);
-      env.venv.put(d.name, new FunEntry(fields, result, body));
-      Type ret = transExp(d.body).ty; // does this return the last expression in the function, aka the result?
-      if (!ret.coerceTo(result))
-        error(d.pos, "return type is different from function result needed");
+      FunEntry fe = new FunEntry(fields, result, body);
+      env.venv.put(fd.name, fe);
+      env.venv.beginScope();
+      for (Absyn.FieldList param = fd.params; param != null; param = param.tail) {
+        System.out.println("parameter \"" + param.name + "\" is being entered into table with type " + param.typ);
+        VarEntry ve = new VarEntry((Type) env.tenv.get(param.typ));
+        env.venv.put(param.name, ve);
+      }
+      System.out.println("translating function body of \"" + fd.name + "\"...");
+      ExpTy ret = transExp(fd.body);
+      System.out.println("return type of body was: \"" + ret.ty + "\"");
+      if (!ret.ty.coerceTo(result))
+        error(fd.pos, "return type is different from function result needed");
+      env.venv.endScope();
     }
 
     for (fd = d; fd != null; fd = fd.next) { // add all params to scope and check if a func doesn't have a body
@@ -325,18 +449,9 @@ public class Semant {
       FunEntry fe = (FunEntry) env.venv.get(fd.name);
       if (!fe.hasBody)
         error(fd.pos, "function \"" + fd.name.toString() + "\" was not defined");
-      fd.entry = fe;
-      env.venv.beginScope();
-      for (Absyn.FieldList param = d.params; param != null; param = param.tail)
-        env.venv.put(param.name, new VarEntry((Type) env.venv.get(param.typ)));
-      env.venv.endScope();
     }
     return null;
   }
-
-  // private ExpTy transFields(Absyn.FieldList f) {
-  // return null;
-  // }
 
   Type transTy(Absyn.Ty t) {
     if (t instanceof Absyn.NameTy)
@@ -370,7 +485,7 @@ public class Semant {
      * and then construct each Types.RECORD before the previous
      * Types.RECORD
      */
-    return transTypeFields(t.fields);
+    return transTypeFields(t.fields); // make a different method for record types
   }
 
   private Types.RECORD transTypeFields(Absyn.FieldList f) {
@@ -406,20 +521,32 @@ public class Semant {
     if (x instanceof VarEntry) {
       VarEntry ent = (VarEntry) x;
       return new ExpTy(null, ent.ty);
+    } else if (x instanceof FunEntry) {
+      FunEntry ent = (FunEntry) x;
+      return new ExpTy(null, ent.result);
     } else {
-      error(v.pos, "variable is unrecognized");
+      error(v.pos, "variable \"" + v.name + "\" is unrecognized");
       return new ExpTy(null, INT);
     }
   }
 
   ExpTy transVar(Absyn.FieldVar v) { // a.x, return type of x
     Type type = transVar(v.var).ty; // get type of variable that is calling a field
+    if (type == NIL)
+      error(v.pos, "can not access a field of a record initialized to be nil");
     // check if type is a RECORD. if it's not, throw error (can only reference a
     // field if variable is a record type)
     if (type instanceof Types.RECORD) {
       // get type of field
-      type = (Type) env.tenv.get(v.field);
-      return new ExpTy(null, type);
+      for (Types.RECORD rec = (Types.RECORD) type; rec != null; rec = rec.tail) {
+        if (rec.fieldName == v.field) { // if field in record = FieldVar's field, return type of that field
+          type = (Type) rec.fieldType;
+          return new ExpTy(null, type);
+        }
+      }
+      // field wasn't found
+      error(v.pos, "field specified is not in record");
+      return new ExpTy(null, INT); // type of anything, doesn't matter
     } else {
       error(v.pos, "can't access a field of a non-record type");
       return new ExpTy(null, INT); // type of anything, doesn't matter
@@ -432,6 +559,9 @@ public class Semant {
     // should we be able to know what type a[x] would return and in turn check
     // it with the type of a?
     // Also do we check if x is in bounds of the array?
+    Type type = transExp(v.index).ty;
+    if (!type.coerceTo(INT))
+      error(v.index.pos, "index of array has to be of type int");
     return transVar(v.var);
   }
 

@@ -1,10 +1,1 @@
-let
-int bar(x:int);
-int foo(x:int) {
-    bar(x)
-}
-int bar(x:int) {
-    x*4
-}
-in foo(3)
-end
+let var a : int := 1 in a := 2 end
