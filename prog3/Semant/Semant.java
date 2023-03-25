@@ -136,7 +136,8 @@ public class Semant {
         checkOrderable(left, right, e.left.pos);
         return new ExpTy(null, left.ty.actual());
       default:
-        throw new Error("unknown operator");
+        error(e.pos, "unknown operator");
+        return new ExpTy(null, INT);
     }
   }
 
@@ -519,7 +520,7 @@ public class Semant {
 
     }
     if (type == null)// not declared yet
-      throw new Error("type doesn't exist");
+      error(t.pos, "type could not be found");
     return new Types.ARRAY(type);
   }
 
