@@ -208,7 +208,18 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.IfExp e) {
-    return null;
+    ExpTy test = transExp(e.test);
+    checkInt(test, e.test.pos);
+    ExpTy thenclause = transExp(e.thenclause);
+    ExpTy elseclause = transExp(e.elseclause);
+
+    if (e.elseclause == null) {
+      return new ExpTy(null, elseclause.ty);
+    } else {
+      if (!thenclause.ty.coerceTo(elseclause.ty) && !elseclause.ty.coerceTo(thenclause.ty))
+        error(e.pos, "type does not match");
+      return elseclause;
+    }
   }
 
   ExpTy transExp(Absyn.BreakExp e) {
@@ -217,6 +228,13 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.WhileExp e) {
+    ExpTy tt = transExp(e.test);
+    checkInt(tt, e.test.pos);
+    // Loop (class) variable = new Loop(env)
+    // state = variable.transExp
+    // if (!state.coerceTo())
+    // error
+    // return new ExpTy
     return null;
   }
 
