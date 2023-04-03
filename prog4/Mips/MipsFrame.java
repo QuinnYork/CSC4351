@@ -11,7 +11,6 @@ import Frame.AccessList;
 public class MipsFrame extends Frame {
 
   private int count = 0;
-  private static final int MAX_REGISTERS = 32;
 
   public Frame newFrame(Symbol name, Util.BoolList formals) {
     Label label;
@@ -45,11 +44,12 @@ public class MipsFrame extends Frame {
   }
 
   public Access allocLocal(boolean escape) {
-    Temp t = new Temp();
-    if (!escape && t.key() < MAX_REGISTERS) // room in temporary storage
-      return new InReg(t);
-    count -= 4;
+    if (!escape) {// room in temporary storage
+      count -= wordSize; // formal still has space allocated
+      return new InReg(new Temp());
+    }
     InFrame i = new InFrame(count);
+    count -= wordSize;
     return i; // else allocate on stack
   }
 }
