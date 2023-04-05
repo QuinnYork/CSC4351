@@ -1,6 +1,9 @@
 # Compiled class file
 *.class
 
+prog4/actual.txt
+prog4/expected.txt
+
 # Log file
 *.log
 
