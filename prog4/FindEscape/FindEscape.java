@@ -8,110 +8,78 @@ public class FindEscape {
     traverseExp(0, e);
   }
 
-  void traverseVar(int depth, Absyn.Var v) {
-    if (v.getClass().equals(Absyn.FieldVar.class)) {
+  private void traverseVar(int depth, Absyn.Var v) {
+    if (v instanceof Absyn.FieldVar)
       traverseVar(depth, (Absyn.FieldVar) v);
-    }
-
-    else if (v.equals(Absyn.SimpleVar.class)) {
+    else if (v instanceof Absyn.SimpleVar)
       traverseVar(depth, (Absyn.SimpleVar) v);
-    }
-
-    else if (v.getClass().equals(Absyn.SubscriptVar.class)) {
+    else if (v instanceof Absyn.SubscriptVar)
       traverseVar(depth, (Absyn.SubscriptVar) v);
-    }
-
-    else {
-      System.out.println("error in transvar");
-    }
+    else
+      System.out.println("error in traverseVar");
   }
 
-  void traverseVar(int depth, Absyn.FieldVar v) {
+  private void traverseVar(int depth, Absyn.FieldVar v) {
     traverseVar(depth, v.var);
   }
 
-  void traverseVar(int depth, Absyn.SubscriptVar v) {
+  private void traverseVar(int depth, Absyn.SubscriptVar v) {
     traverseVar(depth, v.var);
   }
 
-  void traverseVar(int depth, Absyn.SimpleVar v) {
+  private void traverseVar(int depth, Absyn.SimpleVar v) {
     Escape escape = (Escape) escEnv.get(v.name);
     if ((escape == null) || (depth < escape.depth)) {
       return;
     }
     escape.setEscape();
-
   }
 
-  void traverseExp(int depth, Absyn.Exp e) {
-    Class a = e.getClass();
-
-    if (a.equals(Absyn.VarExp.class)) {
+  private void traverseExp(int depth, Absyn.Exp e) {
+    if (e instanceof Absyn.VarExp)
       traverseExp(depth, (Absyn.VarExp) e);
-    }
-
-    else if (a.equals(Absyn.ArrayExp.class)) {
+    else if (e instanceof Absyn.ArrayExp)
       traverseExp(depth, (Absyn.ArrayExp) e);
-    }
-
-    else if (a.equals(Absyn.AssignExp.class)) {
+    else if (e instanceof Absyn.AssignExp)
       traverseExp(depth, (Absyn.AssignExp) e);
-    }
-
-    else if (a.equals(Absyn.CallExp.class)) {
+    else if (e instanceof Absyn.CallExp)
       traverseExp(depth, (Absyn.CallExp) e);
-    }
-
-    else if (a.equals(Absyn.IfExp.class)) {
+    else if (e instanceof Absyn.IfExp)
       traverseExp(depth, (Absyn.IfExp) e);
-    }
-
-    else if (a.equals(Absyn.ForExp.class)) {
+    else if (e instanceof Absyn.ForExp)
       traverseExp(depth, (Absyn.ForExp) e);
-    }
-
-    else if (a.equals(Absyn.LetExp.class)) {
+    else if (e instanceof Absyn.LetExp)
       traverseExp(depth, (Absyn.LetExp) e);
-    }
-
-    else if (a.equals(Absyn.OpExp.class)) {
+    else if (e instanceof Absyn.OpExp)
       traverseExp(depth, (Absyn.OpExp) e);
-    }
-
-    else if (a.equals(Absyn.RecordExp.class)) {
+    else if (e instanceof Absyn.RecordExp)
       traverseExp(depth, (Absyn.RecordExp) e);
-    }
-
-    else if (a.equals(Absyn.SeqExp.class)) {
+    else if (e instanceof Absyn.SeqExp)
       traverseExp(depth, (Absyn.SeqExp) e);
-    }
-
-    else if (a.equals(Absyn.WhileExp.class)) {
+    else if (e instanceof Absyn.WhileExp)
       traverseExp(depth, (Absyn.WhileExp) e);
-    }
-
-    if (a.equals(Absyn.NilExp.class) || a.equals(Absyn.IntExp.class) || a.equals(Absyn.BreakExp.class)
-        || a.equals(Absyn.StringExp.class)) {
+    else if (e instanceof Absyn.NilExp
+        || e instanceof Absyn.IntExp
+        || e instanceof Absyn.BreakExp
+        || e instanceof Absyn.StringExp)
       return;
-    }
-
   }
 
-  void traverseExp(int depth, Absyn.VarExp e) {
+  private void traverseExp(int depth, Absyn.VarExp e) {
     traverseVar(depth, e.var);
   }
 
-  void traverseExp(int depth, Absyn.ArrayExp e) {
+  private void traverseExp(int depth, Absyn.ArrayExp e) {
     traverseExp(depth, e.size);
     traverseExp(depth, e.init);
   }
 
-  void traverseExp(int depth, Absyn.AssignExp e) {
+  private void traverseExp(int depth, Absyn.AssignExp e) {
     traverseVar(depth, e.var);
     traverseExp(depth, e.exp);
   }
 
-  void traverseExp(int depth, Absyn.CallExp e) {
+  private void traverseExp(int depth, Absyn.CallExp e) {
     if (isLeafFunc != null) {
       isLeafFunc.leaf = false;
     }
@@ -123,7 +91,7 @@ public class FindEscape {
     }
   }
 
-  void traverseExp(int depth, Absyn.IfExp e) {
+  private void traverseExp(int depth, Absyn.IfExp e) {
     traverseExp(depth, e.test);
     traverseExp(depth, e.thenclause);
 
@@ -132,11 +100,18 @@ public class FindEscape {
     }
   }
 
-  void traverseExp(int depth, Absyn.ForExp e) {
-    // kind of very confused for this one :(
+  private void traverseExp(int depth, Absyn.ForExp e) {
+    if (e.var instanceof Absyn.AssignExp)
+      traverseExp(depth, (Absyn.AssignExp) e.var);
+    else if (e.var instanceof Absyn.VarDec)
+      traverseDec(depth, (Absyn.VarDec) e.var);
+    else
+      System.out.println("error in traverseForExp: loop var is not of a correct class");
+    traverseExp(depth, e.hi);
+    traverseExp(depth, e.body);
   }
 
-  void traverseExp(int depth, Absyn.LetExp e) {
+  private void traverseExp(int depth, Absyn.LetExp e) {
     escEnv.beginScope();
 
     Absyn.DecList decl = e.decs;
@@ -144,23 +119,24 @@ public class FindEscape {
       traverseDec(depth, decl.head);
       decl = decl.tail;
     }
+    traverseExp(depth, e.body);
+    escEnv.endScope();
   }
 
-  void traverseExp(int depth, Absyn.OpExp e) {
+  private void traverseExp(int depth, Absyn.OpExp e) {
     traverseExp(depth, e.left);
     traverseExp(depth, e.right);
   }
 
-  void traverseExp(int depth, Absyn.RecordExp e) {
+  private void traverseExp(int depth, Absyn.RecordExp e) {
     Absyn.FieldExpList field = e.fields;
     while (field != null) {
       traverseExp(depth, field.init);
       field = field.tail;
     }
-
   }
 
-  void traverseExp(int depth, Absyn.SeqExp e) {
+  private void traverseExp(int depth, Absyn.SeqExp e) {
     Absyn.ExpList l = e.list;
     while (l != null) {
       traverseExp(depth, l.head);
@@ -169,35 +145,29 @@ public class FindEscape {
 
   }
 
-  void traverseExp(int depth, Absyn.WhileExp e) {
+  private void traverseExp(int depth, Absyn.WhileExp e) {
     traverseExp(depth, e.test);
     traverseExp(depth, e.body);
   }
 
-  void traverseDec(int depth, Absyn.Dec d) {
-    if (d.getClass().equals(Absyn.VarDec.class)) {
+  private void traverseDec(int depth, Absyn.Dec d) {
+    if (d instanceof Absyn.VarDec)
       traverseDec(depth, (Absyn.VarDec) d);
-    }
-
-    else if (d.getClass().equals(Absyn.FunctionDec.class)) {
+    else if (d instanceof Absyn.FunctionDec)
       traverseDec(depth, (Absyn.FunctionDec) d);
-    }
-
-    else if (d.getClass().equals(Absyn.TypeDec.class)) {
+    else if (d instanceof Absyn.TypeDec)
       return;
-    }
   }
 
-  void traverseDec(int depth, Absyn.VarDec d) {
+  private void traverseDec(int depth, Absyn.VarDec d) {
     traverseExp(depth, d.init);
     escEnv.put(d.name, new VarEscape(depth, d));
   }
 
-  void traverseDec(int depth, Absyn.FunctionDec d) {
+  private void traverseDec(int depth, Absyn.FunctionDec d) {
     Absyn.FunctionDec func = d;
     while (func != null) {
       escEnv.beginScope();
-      func = func.next;
       Absyn.FieldList functionParam = func.params;
       while (functionParam != null) {
         escEnv.put(functionParam.name, new FormalEscape(depth + 1, functionParam));
@@ -205,6 +175,7 @@ public class FindEscape {
       }
       escEnv.endScope();
       traverseExp(depth + 1, func.body);
+      func = func.next;
     }
   }
 

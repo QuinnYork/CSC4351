@@ -20,6 +20,7 @@ public class MipsFrame extends Frame {
       label = new Label(this.name + "." + name + "." + count++);
     else
       label = new Label(name);
+    this.count = 0;
     return new MipsFrame(label, formals);
   }
 
@@ -44,7 +45,7 @@ public class MipsFrame extends Frame {
   }
 
   public Access allocLocal(boolean escape) {
-    if (!escape) {// room in temporary storage
+    if (!escape) {
       count -= wordSize; // formal still has space allocated
       return new InReg(new Temp());
     }
