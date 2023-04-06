@@ -511,8 +511,7 @@ public class Semant {
   private void putTypeFields(Types.RECORD f, Absyn.FieldList fl) {
     if (f == null)
       return;
-    Translate.Access a = level.allocLocal(fl.escape); // allocate with head's escape field
-    env.venv.put(f.fieldName, new VarEntry(a, f.fieldType));
+    env.venv.put(f.fieldName, new VarEntry(f.fieldType));
     putTypeFields(f.tail, fl.tail);
   }
 

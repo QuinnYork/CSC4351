@@ -11,16 +11,16 @@ import Frame.AccessList;
 public class MipsFrame extends Frame {
 
   private int count = 0;
+  private int number = 0;
 
   public Frame newFrame(Symbol name, Util.BoolList formals) {
     Label label;
     if (name == null)
       label = new Label();
-    else if (this.name != null)
-      label = new Label(this.name + "." + name + "." + count++);
-    else
+    else if (this.name != null) {
+      label = new Label(this.name + "." + name + "." + number++);
+    } else
       label = new Label(name);
-    this.count = 0;
     return new MipsFrame(label, formals);
   }
 
@@ -31,6 +31,8 @@ public class MipsFrame extends Frame {
     name = n;
     this.formals = getAccess(f);
   }
+
+  private int i = 0;
 
   private AccessList getAccess(Util.BoolList f) {
     if (f == null)
@@ -47,7 +49,8 @@ public class MipsFrame extends Frame {
   public Access allocLocal(boolean escape) {
     if (!escape) {
       count -= wordSize; // formal still has space allocated
-      return new InReg(new Temp());
+      InReg ir = new InReg(new Temp());
+      return ir;
     }
     InFrame i = new InFrame(count);
     count -= wordSize;

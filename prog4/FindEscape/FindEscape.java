@@ -2,7 +2,7 @@ package FindEscape;
 
 public class FindEscape {
   Symbol.Table escEnv = new Symbol.Table(); // escEnv maps Symbol to Escape
-  Absyn.FunctionDec isLeafFunc;
+  Absyn.FunctionDec curr_func;
 
   public FindEscape(Absyn.Exp e) {
     traverseExp(0, e);
@@ -29,10 +29,10 @@ public class FindEscape {
 
   private void traverseVar(int depth, Absyn.SimpleVar v) {
     Escape escape = (Escape) escEnv.get(v.name);
-    if ((escape == null) || (depth < escape.depth)) {
+    if (escape != null && escape.depth < depth)
+      escape.setEscape();
+    else
       return;
-    }
-    escape.setEscape();
   }
 
   private void traverseExp(int depth, Absyn.Exp e) {
@@ -80,10 +80,8 @@ public class FindEscape {
   }
 
   private void traverseExp(int depth, Absyn.CallExp e) {
-    if (isLeafFunc != null) {
-      isLeafFunc.leaf = false;
-    }
-
+    if (curr_func != null)
+      curr_func.leaf = false;
     Absyn.ExpList arg = e.args;
     while (arg != null) {
       traverseExp(depth, arg.head);
@@ -142,7 +140,6 @@ public class FindEscape {
       traverseExp(depth, l.head);
       l = l.tail;
     }
-
   }
 
   private void traverseExp(int depth, Absyn.WhileExp e) {
@@ -173,8 +170,16 @@ public class FindEscape {
         escEnv.put(functionParam.name, new FormalEscape(depth + 1, functionParam));
         functionParam = functionParam.tail;
       }
-      escEnv.endScope();
+
+      if (curr_func != null) // if looking at a fun dec inside of a function's body
+        curr_func.leaf = false; // then curr func is not a leaf
+      // about to traverse function body, need to set curr_func field so if we
+      // encounter
+      // a FuncDec or CallExp we can change the lead boolean to false
+      curr_func = func; // set current
       traverseExp(depth + 1, func.body);
+      curr_func = null; // end of function body, set curr to null now
+      escEnv.endScope(); // end scope of formals once we reach the end of the function
       func = func.next;
     }
   }
