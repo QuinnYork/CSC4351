@@ -1,0 +1,11 @@
+let
+    var j := 10
+in
+    if 17 > 3
+        then print("17 > 3, all is good\n")
+        else print("Houston, we have a problem\n");
+    for i := 0 to 10 do
+        (print_int(i); print("\n"));
+    while j > 0 do
+        (print_int(j); print("\n"); j := j - 1)
+end
