@@ -1,4 +1,5 @@
 package Semant;
+
 import Translate.Exp;
 import Types.Type;
 import java.util.Hashtable;
@@ -13,9 +14,11 @@ public class Semant {
   Env env;
   Translate translate;
   Level level;
+
   public Semant(Translate translate, ErrorMsg.ErrorMsg err) {
     this(new Env(err), translate, new Level(translate.frame));
   }
+
   Semant(Env e, Translate t, Level l) {
     env = e;
     translate = t;
@@ -34,10 +37,10 @@ public class Semant {
     env.errorMsg.error(pos, msg);
   }
 
-  static final Types.VOID   VOID   = new Types.VOID();
-  static final Types.INT    INT    = new Types.INT();
+  static final Types.VOID VOID = new Types.VOID();
+  static final Types.INT INT = new Types.INT();
   static final Types.STRING STRING = new Types.STRING();
-  static final Types.NIL    NIL    = new Types.NIL();
+  static final Types.NIL NIL = new Types.NIL();
 
   private Exp checkInt(ExpTy et, int pos) {
     if (!INT.coerceTo(et.ty))
@@ -48,10 +51,10 @@ public class Semant {
   private Exp checkComparable(ExpTy et, int pos) {
     Type a = et.ty.actual();
     if (!(a instanceof Types.INT
-	  || a instanceof Types.STRING
-	  || a instanceof Types.NIL
-	  || a instanceof Types.RECORD
-	  || a instanceof Types.ARRAY))
+        || a instanceof Types.STRING
+        || a instanceof Types.NIL
+        || a instanceof Types.RECORD
+        || a instanceof Types.ARRAY))
       error(pos, "integer, string, nil, record or array required");
     return et.exp;
   }
@@ -59,7 +62,7 @@ public class Semant {
   private Exp checkOrderable(ExpTy et, int pos) {
     Type a = et.ty.actual();
     if (!(a instanceof Types.INT
-	  || a instanceof Types.STRING))
+        || a instanceof Types.STRING))
       error(pos, "integer or string required");
     return et.exp;
   }
@@ -70,36 +73,37 @@ public class Semant {
     if (e == null)
       return new ExpTy(translate.Error(), VOID);
     else if (e instanceof Absyn.VarExp)
-      result = transExp((Absyn.VarExp)e);
+      result = transExp((Absyn.VarExp) e);
     else if (e instanceof Absyn.NilExp)
-      result = transExp((Absyn.NilExp)e);
+      result = transExp((Absyn.NilExp) e);
     else if (e instanceof Absyn.IntExp)
-      result = transExp((Absyn.IntExp)e);
+      result = transExp((Absyn.IntExp) e);
     else if (e instanceof Absyn.StringExp)
-      result = transExp((Absyn.StringExp)e);
+      result = transExp((Absyn.StringExp) e);
     else if (e instanceof Absyn.CallExp)
-      result = transExp((Absyn.CallExp)e);
+      result = transExp((Absyn.CallExp) e);
     else if (e instanceof Absyn.OpExp)
-      result = transExp((Absyn.OpExp)e);
+      result = transExp((Absyn.OpExp) e);
     else if (e instanceof Absyn.RecordExp)
-      result = transExp((Absyn.RecordExp)e);
+      result = transExp((Absyn.RecordExp) e);
     else if (e instanceof Absyn.SeqExp)
-      result = transExp((Absyn.SeqExp)e);
+      result = transExp((Absyn.SeqExp) e);
     else if (e instanceof Absyn.AssignExp)
-      result = transExp((Absyn.AssignExp)e);
+      result = transExp((Absyn.AssignExp) e);
     else if (e instanceof Absyn.IfExp)
-      result = transExp((Absyn.IfExp)e);
+      result = transExp((Absyn.IfExp) e);
     else if (e instanceof Absyn.WhileExp)
-      result = transExp((Absyn.WhileExp)e);
+      result = transExp((Absyn.WhileExp) e);
     else if (e instanceof Absyn.ForExp)
-      result = transExp((Absyn.ForExp)e);
+      result = transExp((Absyn.ForExp) e);
     else if (e instanceof Absyn.BreakExp)
-      result = transExp((Absyn.BreakExp)e);
+      result = transExp((Absyn.BreakExp) e);
     else if (e instanceof Absyn.LetExp)
-      result = transExp((Absyn.LetExp)e);
+      result = transExp((Absyn.LetExp) e);
     else if (e instanceof Absyn.ArrayExp)
-      result = transExp((Absyn.ArrayExp)e);
-    else throw new Error("Semant.transExp");
+      result = transExp((Absyn.ArrayExp) e);
+    else
+      throw new Error("Semant.transExp");
     e.type = result.ty;
     return result;
   }
@@ -114,20 +118,20 @@ public class Semant {
 
   ExpTy transVar(Absyn.Var v, boolean lhs) {
     if (v instanceof Absyn.SimpleVar)
-      return transVar((Absyn.SimpleVar)v, lhs);
+      return transVar((Absyn.SimpleVar) v, lhs);
     if (v instanceof Absyn.FieldVar)
-      return transVar((Absyn.FieldVar)v);
+      return transVar((Absyn.FieldVar) v);
     if (v instanceof Absyn.SubscriptVar)
-      return transVar((Absyn.SubscriptVar)v);
+      return transVar((Absyn.SubscriptVar) v);
     throw new Error("Semant.transVar");
   }
 
   ExpTy transVar(Absyn.SimpleVar v, boolean lhs) {
-    Entry x = (Entry)env.venv.get(v.name);
+    Entry x = (Entry) env.venv.get(v.name);
     if (x instanceof VarEntry) {
-      VarEntry ent = (VarEntry)x;
+      VarEntry ent = (VarEntry) x;
       if (lhs && ent instanceof LoopVarEntry)
-	error(v.pos, "assignment to loop index");
+        error(v.pos, "assignment to loop index");
       return new ExpTy(translate.SimpleVar(ent.access, level), ent.ty);
     }
     error(v.pos, "undeclared variable: " + v.name);
@@ -139,12 +143,10 @@ public class Semant {
     Type actual = var.ty.actual();
     if (actual instanceof Types.RECORD) {
       int count = 0;
-      for (Types.RECORD field = (Types.RECORD)actual;
-	   field != null;
-	   field = field.tail) {
-	if (field.fieldName == v.field)
+      for (Types.RECORD field = (Types.RECORD) actual; field != null; field = field.tail) {
+        if (field.fieldName == v.field)
           return new ExpTy(translate.FieldVar(var.exp, count),
-			   field.fieldType);
+              field.fieldType);
         ++count;
       }
       error(v.pos, "undeclared field: " + v.field);
@@ -159,9 +161,9 @@ public class Semant {
     checkInt(index, v.index.pos);
     Type actual = var.ty.actual();
     if (actual instanceof Types.ARRAY) {
-      Types.ARRAY array = (Types.ARRAY)actual;
+      Types.ARRAY array = (Types.ARRAY) actual;
       return new ExpTy(translate.SubscriptVar(var.exp, index.exp),
-		       array.element);
+          array.element);
     }
     error(v.var.pos, "array required");
     return new ExpTy(translate.Error(), VOID);
@@ -172,7 +174,7 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.IntExp e) {
-  return new ExpTy(translate.IntExp(e.value), INT);
+    return new ExpTy(translate.IntExp(e.value), INT);
   }
 
   ExpTy transExp(Absyn.StringExp e) {
@@ -180,30 +182,29 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.CallExp e) {
-    Entry x = (Entry)env.venv.get(e.func);
+    Entry x = (Entry) env.venv.get(e.func);
     if (x instanceof FunEntry) {
-      FunEntry f = (FunEntry)x;
+      FunEntry f = (FunEntry) x;
       ExpList args = transArgs(e.pos, f.formals, e.args);
       if (f.level == null)
-	return new ExpTy(f.result.coerceTo(VOID)
-			 ? translate.ProcExp(e.func, args, level)
-			 : translate.FunExp(e.func, args, level),
-			 f.result);
+        return new ExpTy(f.result.coerceTo(VOID)
+            ? translate.ProcExp(e.func, args, level)
+            : translate.FunExp(e.func, args, level),
+            f.result);
       else
-	return new ExpTy(f.result.coerceTo(VOID)
-			 ? translate.ProcExp(f.level, args, level)
-			 : translate.FunExp(f.level, args, level),
-			 f.result);
+        return new ExpTy(f.result.coerceTo(VOID)
+            ? translate.ProcExp(f.level, args, level)
+            : translate.FunExp(f.level, args, level),
+            f.result);
     }
     error(e.pos, "undeclared function: " + e.func);
     return new ExpTy(translate.Error(), VOID);
   }
 
-  private ExpList transArgs(int epos, Types.RECORD formal, Absyn.ExpList args)
-  {
+  private ExpList transArgs(int epos, Types.RECORD formal, Absyn.ExpList args) {
     if (formal == null) {
       if (args != null)
-	error(args.head.pos, "too many arguments");
+        error(args.head.pos, "too many arguments");
       return null;
     }
     if (args == null) {
@@ -221,46 +222,46 @@ public class Semant {
     ExpTy right = transExp(e.right);
 
     switch (e.oper) {
-    case Absyn.OpExp.PLUS:
-    case Absyn.OpExp.MINUS:
-    case Absyn.OpExp.MUL:
-    case Absyn.OpExp.DIV:
-      checkInt(left, e.left.pos);
-      checkInt(right, e.right.pos);
-      return new ExpTy(translate.OpExp(e.oper, left.exp, right.exp), INT);
-    case Absyn.OpExp.EQ:
-    case Absyn.OpExp.NE:
-      checkComparable(left, e.left.pos);
-      checkComparable(right, e.right.pos);
-      if (STRING.coerceTo(left.ty) && STRING.coerceTo(right.ty))
-	return new ExpTy(translate.StrOpExp(e.oper, left.exp, right.exp), INT);
-      else if (!left.ty.coerceTo(right.ty) && !right.ty.coerceTo(left.ty)) 
-	error(e.pos, "incompatible operands to equality operator");
-      return new ExpTy(translate.OpExp(e.oper, left.exp, right.exp), INT);
-    case Absyn.OpExp.LT:
-    case Absyn.OpExp.LE:
-    case Absyn.OpExp.GT:
-    case Absyn.OpExp.GE:
-      checkOrderable(left, e.left.pos);
-      checkOrderable(right, e.right.pos);
-      if (STRING.coerceTo(left.ty) && STRING.coerceTo(right.ty))
-	return new ExpTy(translate.StrOpExp(e.oper, left.exp, right.exp), INT);
-      else if (!left.ty.coerceTo(right.ty) && !right.ty.coerceTo(left.ty))
-	error(e.pos, "incompatible operands to inequality operator");
-      return new ExpTy(translate.OpExp(e.oper, left.exp, right.exp), INT);
-    default:
-      throw new Error("unknown operator");
+      case Absyn.OpExp.PLUS:
+      case Absyn.OpExp.MINUS:
+      case Absyn.OpExp.MUL:
+      case Absyn.OpExp.DIV:
+        checkInt(left, e.left.pos);
+        checkInt(right, e.right.pos);
+        return new ExpTy(translate.OpExp(e.oper, left.exp, right.exp), INT);
+      case Absyn.OpExp.EQ:
+      case Absyn.OpExp.NE:
+        checkComparable(left, e.left.pos);
+        checkComparable(right, e.right.pos);
+        if (STRING.coerceTo(left.ty) && STRING.coerceTo(right.ty))
+          return new ExpTy(translate.StrOpExp(e.oper, left.exp, right.exp), INT);
+        else if (!left.ty.coerceTo(right.ty) && !right.ty.coerceTo(left.ty))
+          error(e.pos, "incompatible operands to equality operator");
+        return new ExpTy(translate.OpExp(e.oper, left.exp, right.exp), INT);
+      case Absyn.OpExp.LT:
+      case Absyn.OpExp.LE:
+      case Absyn.OpExp.GT:
+      case Absyn.OpExp.GE:
+        checkOrderable(left, e.left.pos);
+        checkOrderable(right, e.right.pos);
+        if (STRING.coerceTo(left.ty) && STRING.coerceTo(right.ty))
+          return new ExpTy(translate.StrOpExp(e.oper, left.exp, right.exp), INT);
+        else if (!left.ty.coerceTo(right.ty) && !right.ty.coerceTo(left.ty))
+          error(e.pos, "incompatible operands to inequality operator");
+        return new ExpTy(translate.OpExp(e.oper, left.exp, right.exp), INT);
+      default:
+        throw new Error("unknown operator");
     }
   }
 
   ExpTy transExp(Absyn.RecordExp e) {
-    Types.NAME name = (Types.NAME)env.tenv.get(e.typ);
+    Types.NAME name = (Types.NAME) env.tenv.get(e.typ);
     if (name != null) {
       Type actual = name.actual();
       if (actual instanceof Types.RECORD) {
-	Types.RECORD r = (Types.RECORD)actual;
+        Types.RECORD r = (Types.RECORD) actual;
         return new ExpTy(translate.RecordExp(transFields(e.pos, r, e.fields)),
-			 name);
+            name);
       }
       error(e.pos, "record type required");
     } else
@@ -268,8 +269,7 @@ public class Semant {
     return new ExpTy(translate.Error(), VOID);
   }
 
-  private ExpList transFields(int epos, Types.RECORD f, Absyn.FieldExpList exp)
-  {
+  private ExpList transFields(int epos, Types.RECORD f, Absyn.FieldExpList exp) {
     if (f == null) {
       if (exp != null)
         error(exp.pos, "too many expressions");
@@ -312,10 +312,10 @@ public class Semant {
     ExpTy thenclause = transExp(e.thenclause);
     ExpTy elseclause = transExp(e.elseclause);
     if (!thenclause.ty.coerceTo(elseclause.ty)
-	&& !elseclause.ty.coerceTo(thenclause.ty))
+        && !elseclause.ty.coerceTo(thenclause.ty))
       error(e.pos, "result type mismatch");
     return new ExpTy(translate.IfExp(test.exp, thenclause.exp, elseclause.exp),
-		     elseclause.ty);
+        elseclause.ty);
   }
 
   ExpTy transExp(Absyn.WhileExp e) {
@@ -332,20 +332,19 @@ public class Semant {
     ExpTy lo = null;
     ExpTy id = null;
     if (e.var instanceof Absyn.VarDec)
-      lo = transExp(((Absyn.VarDec)e.var).init);
+      lo = transExp(((Absyn.VarDec) e.var).init);
     else if (e.var instanceof Absyn.AssignExp) {
-      id = transVar(((Absyn.AssignExp)e.var).var);
+      id = transVar(((Absyn.AssignExp) e.var).var);
       checkInt(id, e.var.pos);
-      lo = transExp(((Absyn.AssignExp)e.var).exp);
-    }
-    else
+      lo = transExp(((Absyn.AssignExp) e.var).exp);
+    } else
       throw new Error("Semant.transExp(ForExp)");
     checkInt(lo, e.var.pos);
     ExpTy hi = transExp(e.hi);
     checkInt(hi, e.hi.pos);
     Access access = null;
     if (e.var instanceof Absyn.VarDec) {
-      Absyn.VarDec var = (Absyn.VarDec)e.var;
+      Absyn.VarDec var = (Absyn.VarDec) e.var;
       env.venv.beginScope();
       access = level.allocLocal(var.escape);
       var.entry = new LoopVarEntry(access, INT);
@@ -357,14 +356,11 @@ public class Semant {
       error(e.body.pos, "result type mismatch");
     if (e.var instanceof Absyn.VarDec) {
       env.venv.endScope();
-      return
-	new ExpTy(translate.ForExp(access, lo.exp, hi.exp, body.exp, loop.done),
-		  VOID);
-    }
-    else if (e.var instanceof Absyn.AssignExp)
-      return
-	new ExpTy(translate.ForExp(id.exp, lo.exp, hi.exp, body.exp, loop.done),
-		  VOID);
+      return new ExpTy(translate.ForExp(access, lo.exp, hi.exp, body.exp, loop.done),
+          VOID);
+    } else if (e.var instanceof Absyn.AssignExp)
+      return new ExpTy(translate.ForExp(id.exp, lo.exp, hi.exp, body.exp, loop.done),
+          VOID);
     else
       return new ExpTy(translate.Error(), VOID);
   }
@@ -388,19 +384,19 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.ArrayExp e) {
-    Types.NAME name = (Types.NAME)env.tenv.get(e.typ);
+    Types.NAME name = (Types.NAME) env.tenv.get(e.typ);
     ExpTy size = transExp(e.size);
     ExpTy init = transExp(e.init);
     checkInt(size, e.size.pos);
     if (name != null) {
       Type actual = name.actual();
       if (actual instanceof Types.ARRAY) {
-	Types.ARRAY array = (Types.ARRAY)actual;
-	if (!init.ty.coerceTo(array.element))
-	  error(e.init.pos, "element type mismatch");
+        Types.ARRAY array = (Types.ARRAY) actual;
+        if (!init.ty.coerceTo(array.element))
+          error(e.init.pos, "element type mismatch");
         return new ExpTy(translate.ArrayExp(size.exp, init.exp), name);
       } else
-	error(e.pos, "array type required");
+        error(e.pos, "array type required");
     } else
       error(e.pos, "undeclared type: " + e.typ);
     return new ExpTy(translate.Error(), VOID);
@@ -408,11 +404,11 @@ public class Semant {
 
   Exp transDec(Absyn.Dec d) {
     if (d instanceof Absyn.VarDec)
-      return transDec((Absyn.VarDec)d);
+      return transDec((Absyn.VarDec) d);
     if (d instanceof Absyn.TypeDec)
-      return transDec((Absyn.TypeDec)d);
+      return transDec((Absyn.TypeDec) d);
     if (d instanceof Absyn.FunctionDec)
-      return transDec((Absyn.FunctionDec)d);
+      return transDec((Absyn.FunctionDec) d);
     throw new Error("Semant.transDec");
   }
 
@@ -421,12 +417,12 @@ public class Semant {
     Type type;
     if (d.typ == null) {
       if (init.ty.coerceTo(NIL))
-	error(d.pos, "record type required");
+        error(d.pos, "record type required");
       type = init.ty;
     } else {
       type = transTy(d.typ);
       if (!init.ty.coerceTo(type))
-	error(d.pos, "assignment type mismatch");
+        error(d.pos, "assignment type mismatch");
     }
     Access access = level.allocLocal(d.escape);
     d.entry = new VarEntry(access, type);
@@ -436,8 +432,8 @@ public class Semant {
 
   Exp transDec(Absyn.TypeDec d) {
     // 1st pass - handles the type headers
-    // Using a local hashtable, check if there are two types 
-    // with the same name in the same (consecutive) batch 
+    // Using a local hashtable, check if there are two types
+    // with the same name in the same (consecutive) batch
     // of mutually recursive types. See test38.tig!
     Hashtable hash = new Hashtable();
     for (Absyn.TypeDec type = d; type != null; type = type.next) {
@@ -449,13 +445,13 @@ public class Semant {
 
     // 2nd pass - handles the type bodies
     for (Absyn.TypeDec type = d; type != null; type = type.next) {
-      Types.NAME name = (Types.NAME)type.entry;
+      Types.NAME name = (Types.NAME) type.entry;
       name.bind(transTy(type.ty));
     }
 
     // check for illegal cycle in type declarations
     for (Absyn.TypeDec type = d; type != null; type = type.next) {
-      Types.NAME name = (Types.NAME)type.entry;
+      Types.NAME name = (Types.NAME) type.entry;
       if (name.isLoop())
         error(type.pos, "illegal type cycle");
     }
@@ -466,7 +462,7 @@ public class Semant {
     if (formal1 == null || formal2 == null)
       return formal1 == formal2;
     if (!formal1.fieldType.coerceTo(formal2.fieldType)
-	|| !formal2.fieldType.coerceTo(formal1.fieldType))
+        || !formal2.fieldType.coerceTo(formal1.fieldType))
       return false;
     return compParamTypes(formal1.tail, formal2.tail);
   }
@@ -478,41 +474,40 @@ public class Semant {
       Types.RECORD fields = transTypeFields(new Hashtable(), f.params);
       Type type = transTy(f.result);
       if (hash.put(f.name, f.name) != null) {
-	Entry x = (Entry)env.venv.get(f.name);
-	if (!(x instanceof FunEntry))
-	  throw new Error("Semant.transDec(FunctionDec)");
-	FunEntry g = (FunEntry)x;
-	if (!compParamTypes(fields, g.formals))
-	  error(f.pos, "function redeclared");
-	if (!g.result.coerceTo(type) || !type.coerceTo(g.result))
-	  error(f.pos, "function redeclared");
-	if (g.hasBody && f.body != null)
-	  error(f.pos, "function redeclared");
-	g.hasBody = g.hasBody || f.body != null;
-	f.entry = g;
-      }
-      else {
-	Level newLevel = new Level(level, f.name, escapes(f.params), f.leaf);
-	f.entry = new FunEntry(newLevel, fields, type, f.body != null);
-	env.venv.put(f.name, f.entry);
+        Entry x = (Entry) env.venv.get(f.name);
+        if (!(x instanceof FunEntry))
+          throw new Error("Semant.transDec(FunctionDec)");
+        FunEntry g = (FunEntry) x;
+        if (!compParamTypes(fields, g.formals))
+          error(f.pos, "function redeclared");
+        if (!g.result.coerceTo(type) || !type.coerceTo(g.result))
+          error(f.pos, "function redeclared");
+        if (g.hasBody && f.body != null)
+          error(f.pos, "function redeclared");
+        g.hasBody = g.hasBody || f.body != null;
+        f.entry = g;
+      } else {
+        Level newLevel = new Level(level, f.name, escapes(f.params), f.leaf);
+        f.entry = new FunEntry(newLevel, fields, type, f.body != null);
+        env.venv.put(f.name, f.entry);
       }
       // Still in 1st pass - handle the function bodies
       if (f.body != null) {
         env.venv.beginScope();
-	putTypeFields(f.entry.formals, f.entry.level.formals);
-	Semant fun = new Semant(env, translate, f.entry.level);
-	ExpTy body = fun.transExp(f.body);
-	if (!body.ty.coerceTo(f.entry.result))
-	  error(f.body.pos, "result type mismatch");
-	translate.procEntryExit(f.entry.level, body.exp);
-	env.venv.endScope();
+        putTypeFields(f.entry.formals, f.entry.level.formals);
+        Semant fun = new Semant(env, translate, f.entry.level);
+        ExpTy body = fun.transExp(f.body);
+        if (!body.ty.coerceTo(f.entry.result))
+          error(f.body.pos, "result type mismatch");
+        translate.procEntryExit(f.entry.level, body.exp);
+        env.venv.endScope();
       }
     }
     // 2nd pass - report error for function decls without bodies
     for (Absyn.FunctionDec f = d; f != null; f = f.next) {
-      FunEntry g = (FunEntry)env.venv.get(f.name);
+      FunEntry g = (FunEntry) env.venv.get(f.name);
       if (!g.hasBody)
-	error(d.pos, "function " + f.name + " undefined");
+        error(d.pos, "function " + f.name + " undefined");
     }
     return translate.FunctionDec();
   }
@@ -526,7 +521,7 @@ public class Semant {
   private Types.RECORD transTypeFields(Hashtable hash, Absyn.FieldList f) {
     if (f == null)
       return null;
-    Types.NAME name = (Types.NAME)env.tenv.get(f.typ);
+    Types.NAME name = (Types.NAME) env.tenv.get(f.typ);
     if (name == null)
       error(f.pos, "undeclared type: " + f.typ);
     if (hash.put(f.name, f.name) != null)
@@ -534,7 +529,7 @@ public class Semant {
     return new Types.RECORD(f.name, name, transTypeFields(hash, f.tail));
   }
 
-  private void putTypeFields (Types.RECORD f, AccessList a) {
+  private void putTypeFields(Types.RECORD f, AccessList a) {
     if (f == null)
       return;
     env.venv.put(f.fieldName, new VarEntry(a.head, f.fieldType));
@@ -543,18 +538,18 @@ public class Semant {
 
   Type transTy(Absyn.Ty t) {
     if (t instanceof Absyn.NameTy)
-      return transTy((Absyn.NameTy)t);
+      return transTy((Absyn.NameTy) t);
     if (t instanceof Absyn.RecordTy)
-      return transTy((Absyn.RecordTy)t);
+      return transTy((Absyn.RecordTy) t);
     if (t instanceof Absyn.ArrayTy)
-      return transTy((Absyn.ArrayTy)t);
+      return transTy((Absyn.ArrayTy) t);
     throw new Error("Semant.transTy");
   }
 
   Type transTy(Absyn.NameTy t) {
     if (t == null)
       return VOID;
-    Types.NAME name = (Types.NAME)env.tenv.get(t.name);
+    Types.NAME name = (Types.NAME) env.tenv.get(t.name);
     if (name != null)
       return name;
     error(t.pos, "undeclared type: " + t.name);
@@ -569,7 +564,7 @@ public class Semant {
   }
 
   Type transTy(Absyn.ArrayTy t) {
-    Types.NAME name = (Types.NAME)env.tenv.get(t.typ);
+    Types.NAME name = (Types.NAME) env.tenv.get(t.typ);
     if (name != null)
       return new Types.ARRAY(name);
     error(t.pos, "undeclared type: " + t.typ);
@@ -579,6 +574,7 @@ public class Semant {
 
 class LoopSemant extends Semant {
   Temp.Label done;
+
   LoopSemant(Env e, Translate t, Level l) {
     super(e, t, l);
     done = new Temp.Label();
