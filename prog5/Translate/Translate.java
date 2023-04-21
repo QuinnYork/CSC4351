@@ -209,8 +209,8 @@ public class Translate {
     }
     ex = e.head.unEx();
     if (ex == null)
-      return new Nx(e.head.unNx());
-    return new Ex(ex);
+      return new Nx(SEQ(stm, e.head.unNx()));
+    return new Ex(ESEQ(stm, ex));
   }
 
   public Exp AssignExp(Exp lhs, Exp rhs) {
