@@ -3,6 +3,9 @@
 
 prog4/actual.txt
 prog4/expected.txt
+prog5/actual.txt
+prog5/expected.txt
+prog5/questions.txt
 
 # Log file
 *.log

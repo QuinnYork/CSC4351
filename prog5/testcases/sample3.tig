@@ -1,0 +1,7 @@
+let
+    var thermostat : int := -17
+in
+    thermostat := thermostat + 1;
+    print_int(thermostat);
+    print("\n")
+end

@@ -1,0 +1,12 @@
+let
+    function fact(n : int): int =
+        let
+            function f(n : int, acc : int) : int =
+                if n > 1 then f(n - 1, acc * n) else acc
+        in
+            f(n, 1)
+        end
+in
+    print_int(fact(7));
+    print("\n")
+end

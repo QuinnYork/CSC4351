@@ -1,0 +1,14 @@
+let 
+    function do_nothing (a : int, b : string): 
+        int = (
+            do_nothing2 (a + 1);
+    ) 
+
+    function do_nothing2(d : int):
+        string = (
+            do_nothing(d, "str");
+            ""
+        )
+in 
+    do_nothing(0, "str2")
+end

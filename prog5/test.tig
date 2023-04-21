@@ -1,2 +1,5 @@
-for var i := 1 to 3
-do ()
+let
+int foo(a:int, b:int) {
+    a
+}
+in foo(1, 2) end

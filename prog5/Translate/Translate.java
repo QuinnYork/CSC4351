@@ -120,16 +120,34 @@ public class Translate {
     // } while (!access.home.equals(level));
     if (level.equals(access.home))
       return new Ex(access.acc.exp(new TEMP(access.home.frame.FP())));
-    else
-      return SimpleVar(access, level.parent);
+    else {
+      // level isn't home of variable, add a MEM tree that adds on the current FP
+      Access a = level.frameFormals.head;
+      return new Ex(MEM(
+          BINOP(
+              0, // PLUS
+              a.acc.exp(new TEMP(a.home.frame.FP())), // Add on static link offset
+              SimpleVar(access, level.parent).unEx()))); // Recursive call of level's parent
+    }
   }
 
+  // FieldVar and SubscriptVar could be wrong
   public Exp FieldVar(Exp record, int index) {
-    return Error();
+    return new Ex(
+        MEM(
+            BINOP(
+                0,
+                record.unEx(),
+                CONST(index))));
   }
 
   public Exp SubscriptVar(Exp array, Exp index) {
-    return Error();
+    return new Ex(
+        MEM(
+            BINOP(
+                0,
+                array.unEx(),
+                index.unEx())));
   }
 
   public Exp NilExp() {
@@ -160,8 +178,11 @@ public class Translate {
   }
 
   private Tree.Exp CallExp(Level f, ExpList args, Level from) {
-    // return new Tree.CALL(null, args);
-    throw new Error("Translate.CallExp unimplemented");
+    // ExpList(args) is just the arguments being passed to the function
+    // need formal temporary as well
+    Tree.ExpList callArgs = ExpList(args);
+    Tree.ExpList list = ExpList(TEMP(from.frame.FP()), callArgs);
+    return CALL(NAME(f.frame.name), list);
   }
 
   public Exp FunExp(Symbol f, ExpList args, Level from) {
@@ -181,22 +202,57 @@ public class Translate {
   }
 
   public Exp OpExp(int op, Exp left, Exp right) {
+    // need to chose BINOP or construction of a RelCx here
+    // TODO
     return new Ex(BINOP(op, left.unEx(), right.unEx()));
   }
 
   public Exp StrOpExp(int op, Exp left, Exp right) {
     // don't know if this is right
+    // TODO
     return new RelCx(op, left.unEx(), right.unEx());
   }
 
   public Exp RecordExp(ExpList init) {
-    return init.head;
+    Tree.Exp ex;
+    Tree.Stm call = initRecord(init); // start with MOVE instr
+    Tree.Stm stm;
+    if (init.tail != null)
+      stm = init.head.unNx();
+    else {
+      if (init.head.unEx() == null)
+        return new Nx(init.head.unNx());
+      return new Ex(init.head.unEx());
+    }
+    while (init.tail != null) {
+      stm = SEQ(stm, init.head.unNx());
+      init = init.tail;
+    }
+    stm = SEQ(call, stm); // add on allocRecord CALL tree
+    ex = init.head.unEx();
+    if (ex == null)
+      return new Nx(SEQ(stm, init.head.unNx()));
+    return new Ex(ESEQ(stm, ex));
+  }
+
+  private Tree.Stm initRecord(ExpList init) {
+    // creates move tree that uses call with size of record (# of fields)
+    ExpList list = init;
+    int size = 0;
+    while (list != null) {
+      size++;
+      list = list.tail;
+    }
+    Label recFunc = new Label("_allocRecord");
+    return MOVE(TEMP(new Temp()), CALL(NAME(recFunc), ExpList(CONST(size))));
   }
 
   public Exp SeqExp(ExpList e) {
     Tree.Stm stm;
     Tree.Exp ex;
-    if (e.tail != null)
+    if (e == null)
+      return null;
+    else if (e.tail != null)
       stm = e.head.unNx();
     else {
       if (e.head.unEx() == null)
@@ -218,6 +274,11 @@ public class Translate {
   }
 
   public Exp IfExp(Exp cc, Exp aa, Exp bb) {
+    // TODO
+    Tree.Stm stm;
+    Tree.Exp ret = aa.unEx();
+    if (ret == null) // both aa and bb will return nothing, use Nx
+      stm = aa.unNx();
     return Error();
   }
 
@@ -236,7 +297,7 @@ public class Translate {
   }
 
   public Exp ForExp(Access i, Exp lo, Exp hi, Exp body, Label done) {
-    // AssignExp used
+    // VarDec used
     // get initial tree for loop var dec
     // do something with hi so we can put it in a temp
     // and use during CJUMP
@@ -274,16 +335,48 @@ public class Translate {
   }
 
   public Exp ForExp(Exp id, Exp lo, Exp hi, Exp body, Label done) {
-    // VarDec used? (since we know where it was declared)
+    // AssignExp used
+    // Create a Tree.Stm (MOVE) that puts the lo value into the TEMP or MEM of id
+    // Just like VarDec ForExp except we already have the variable
+    Exp from_lo = new Nx(MOVE(id.unEx(), lo.unEx()));
+    Exp to_hi = new Ex(TEMP(new Temp())); // create temp for hi number
+    // get far left SEQ tree
+    Tree.Stm stm = SEQ(from_lo.unNx(), MOVE(to_hi.unEx(), hi.unEx()));
+    Tree.MOVE move = (Tree.MOVE) from_lo.unNx();
+    RelCx rel_init = new RelCx(4, move.dst, to_hi.unEx());
+    RelCx rel_post = new RelCx(2, move.dst, to_hi.unEx());
+    Label first = new Label();
+    Label second = new Label();
 
-    return Error();
+    // Configures the body with incrementing the loop var
+    Tree.Stm bod;
+    System.out.println(body.getClass());
+    if (body == null || body instanceof Ex)
+      bod = MOVE(move.dst, BINOP(0, move.dst, CONST(1)));
+    else
+      bod = SEQ(body.unNx(), MOVE(move.dst, BINOP(0, move.dst, CONST(1))));
+
+    stm = SEQ(
+        SEQ(
+            SEQ(stm, rel_init.unCx(first, done)),
+            SEQ(
+                SEQ(LABEL(first), rel_post.unCx(second, done)),
+                SEQ(
+                    SEQ(LABEL(second),
+                        bod),
+                    JUMP(first)))),
+        LABEL(done));
+
+    return new Nx(stm);
   }
 
   public Exp BreakExp(Label done) {
-    return Error();
+    return new Nx(JUMP(done));
   }
 
   public Exp LetExp(ExpList lets, Exp body) {
+    if (lets == null)
+      return null;
     Tree.Stm stm = lets.head.unNx(); // build this tree with each dec inside of lets
     lets = lets.tail;
     while (lets != null) {
@@ -298,14 +391,17 @@ public class Translate {
         stm = SEQ(stm, body.unNx());
         return new Nx(stm);
       }
-
       return new Ex(ESEQ(stm, exp));
     }
     return new Nx(stm);
   }
 
   public Exp ArrayExp(Exp size, Exp init) {
-    return Error();
+    return new Ex(
+      CALL(
+        NAME(
+          new Label("_initArray")), 
+          ExpList(size.unEx(), ExpList(init.unEx()))));
   }
 
   public Exp VarDec(Access a, Exp init) {
