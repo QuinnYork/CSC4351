@@ -35,11 +35,31 @@ class IfThenElseExp extends Exp {
 
   Tree.Exp unEx() {
     // You must implement this function
-    return new Tree.CONST(0);
+    Temp r = new Temp();
+    return new Tree.ESEQ(
+      new Tree.SEQ(
+        new Tree.SEQ(
+          cond.unCx(t, f), 
+          new Tree.SEQ(
+            new Tree.SEQ(
+              new Tree.LABEL(t), 
+              new Tree.SEQ(
+                new Tree.MOVE(
+                  new Tree.TEMP(r), 
+                  a.unEx()), 
+                new Tree.JUMP(join))), 
+            new Tree.SEQ(
+              new Tree.LABEL(f), 
+              new Tree.SEQ(
+                new Tree.MOVE(
+                  new Tree.TEMP(r), 
+                  b.unEx()), 
+                new Tree.JUMP(join))))), 
+        new Tree.LABEL(join)), 
+      new Tree.TEMP(r));
   }
 
   Tree.Stm unNx() {
-    // You must implement this function
-    return null;
+    return new Tree.SEQ(unCx(join, join), new Tree.LABEL(join));
   }
 }

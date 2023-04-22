@@ -118,20 +118,42 @@ public class Translate {
     // return null;
     // }
     // } while (!access.home.equals(level));
-    if (level.equals(access.home))
-      return new Ex(access.acc.exp(new TEMP(access.home.frame.FP())));
-    else {
-      // level isn't home of variable, add a MEM tree that adds on the current FP
-      Access a = level.frameFormals.head;
-      return new Ex(MEM(
-          BINOP(
-              0, // PLUS
-              a.acc.exp(new TEMP(a.home.frame.FP())), // Add on static link offset
-              SimpleVar(access, level.parent).unEx()))); // Recursive call of level's parent
+    /*
+     * acc.exp returns a MEM tree
+     * need to get to base level (where level == access.home)
+     * and build tree from there
+     */
+    // need to add on current level's static link pointer instead of the 
+    // access FP with offset
+    // exp() outermost call gives a MEM(BINOP) with fp and offset
+    // as we go inwards working through more levels, we want to add on
+    // the new level's frame pointer + offset which is another exp() call
+    // but we are using access's exp call that will only contain the offset
+    // -4 (for queens.tig). most likely need to create our own MEM(BINOP) tree
+    // and pass the full tree to the base call of exp()
+    // who's right exp will be -4
+    //
+    // need to collect a tree
+    // if (access.home == level)
+    //   return new Ex(access.acc.exp(TEMP(level.frame.FP())));
+    // else {
+    //   return new Ex(access.acc.exp(SimpleVar(access, level.parent).unEx()));
+    // }
+
+    Access static_link = level.frameFormals.head; // initial static link
+    Tree.Exp exp = static_link.acc.exp(TEMP(level.frame.FP()));
+    if (level.parent == null)
+      return new Ex(exp);
+    level = level.parent;
+    while (access.home != level && level != null && level.frameFormals != null) {
+      static_link = level.frameFormals.head;
+      exp = static_link.acc.exp(exp);
+      level = level.parent;
     }
+    return new Ex(access.acc.exp(exp));
+
   }
 
-  // FieldVar and SubscriptVar could be wrong
   public Exp FieldVar(Exp record, int index) {
     return new Ex(
         MEM(
@@ -142,12 +164,45 @@ public class Translate {
   }
 
   public Exp SubscriptVar(Exp array, Exp index) {
-    return new Ex(
+    Temp arr = new Temp();
+    Temp idx = new Temp();
+    Label t = new Label("_BADSUB");
+    Label f = new Label();
+    Label z = new Label();
+    return new Ex(ESEQ(
+      SEQ(
+        MOVE(
+          TEMP(arr), 
+          array.unEx()), 
+        SEQ(
+          MOVE(
+            TEMP(idx), 
+            index.unEx()), 
+        SEQ(
+          CJUMP(
+            2, 
+            TEMP(idx), 
+            CONST(0), 
+            t, 
+            f), 
+          SEQ(LABEL(f), 
+        SEQ(
+          CJUMP(
+            3, 
+            TEMP(idx), 
+            array.unEx(), 
+            t, 
+            z), 
+          LABEL(z)))))), 
         MEM(
+          BINOP(
+            0, 
+            TEMP(arr), 
             BINOP(
-                0,
-                array.unEx(),
-                index.unEx())));
+              2, 
+              TEMP(idx), 
+              CONST(4)))))
+      );
   }
 
   public Exp NilExp() {
@@ -180,6 +235,9 @@ public class Translate {
   private Tree.Exp CallExp(Level f, ExpList args, Level from) {
     // ExpList(args) is just the arguments being passed to the function
     // need formal temporary as well
+    while (from != f.parent) {
+      from = from.parent;
+    }
     Tree.ExpList callArgs = ExpList(args);
     Tree.ExpList list = ExpList(TEMP(from.frame.FP()), callArgs);
     return CALL(NAME(f.frame.name), list);
@@ -203,14 +261,23 @@ public class Translate {
 
   public Exp OpExp(int op, Exp left, Exp right) {
     // need to chose BINOP or construction of a RelCx here
-    // TODO
-    return new Ex(BINOP(op, left.unEx(), right.unEx()));
+    // if <= 3 use BINOP
+    if (op <= 3)
+      return new Ex(BINOP(op, left.unEx(), right.unEx()));
+    else
+      return new RelCx(op-4, left.unEx(), right.unEx());
   }
 
   public Exp StrOpExp(int op, Exp left, Exp right) {
-    // don't know if this is right
-    // TODO
-    return new RelCx(op, left.unEx(), right.unEx());
+    // Cx.unEx() provides an ESEQ tree that creates a 0 or 1 boolean value
+    // based off the Str comparison
+    Tree.Exp cmp = CALL(
+      NAME(
+        new Label("_strcmp")), 
+      ExpList(
+        left.unEx(), 
+        ExpList(right.unEx())));
+    return new Ex((new RelCx(op-4, cmp, CONST(0))).unEx());
   }
 
   public Exp RecordExp(ExpList init) {
@@ -274,19 +341,13 @@ public class Translate {
   }
 
   public Exp IfExp(Exp cc, Exp aa, Exp bb) {
-    // TODO
-    Tree.Stm stm;
-    Tree.Exp ret = aa.unEx();
-    if (ret == null) // both aa and bb will return nothing, use Nx
-      stm = aa.unNx();
-    return Error();
+    return new Ex(new IfThenElseExp(cc, aa, bb).unEx());
   }
 
   public Exp WhileExp(Exp test, Exp body, Label done) {
     Tree.Stm stm = body.unNx();
     Label start = new Label(); // L1
     Label body_jump = new Label(); // L2
-    System.out.println(test.unEx());
     stm = SEQ(
         SEQ(
             SEQ(LABEL(start), test.unCx(body_jump, done)),
@@ -314,20 +375,36 @@ public class Translate {
 
     // Configures the body with incrementing the loop var
     Tree.Stm bod;
-    System.out.println(body.getClass());
+    Tree.Stm increment = MOVE(move.dst, BINOP(0, move.dst, CONST(1)));
     if (body == null || body instanceof Ex)
-      bod = MOVE(move.dst, BINOP(0, move.dst, CONST(1)));
+      return new Nx(
+        SEQ(
+          SEQ(
+            SEQ(
+              stm, 
+              SEQ(
+                LABEL(first), 
+                rel_init.unCx(first, done))), 
+              SEQ(
+                SEQ(
+                  LABEL(second), 
+                  increment), 
+                  JUMP(first))), 
+                  LABEL(done))
+      );
     else
-      bod = SEQ(body.unNx(), MOVE(move.dst, BINOP(0, move.dst, CONST(1))));
+      bod = body.unNx();
 
     stm = SEQ(
         SEQ(
             SEQ(stm, rel_init.unCx(first, done)),
             SEQ(
-                SEQ(LABEL(first), rel_post.unCx(second, done)),
+                SEQ(
+                  SEQ(LABEL(first), bod), 
+                  rel_post.unCx(second, done)),
                 SEQ(
                     SEQ(LABEL(second),
-                        bod),
+                        increment),
                     JUMP(first)))),
         LABEL(done));
 
@@ -350,7 +427,6 @@ public class Translate {
 
     // Configures the body with incrementing the loop var
     Tree.Stm bod;
-    System.out.println(body.getClass());
     if (body == null || body instanceof Ex)
       bod = MOVE(move.dst, BINOP(0, move.dst, CONST(1)));
     else
@@ -405,7 +481,7 @@ public class Translate {
   }
 
   public Exp VarDec(Access a, Exp init) {
-    Tree.Exp exp = a.acc.exp(init.unEx());
+    Tree.Exp exp = a.acc.exp(TEMP(a.home.frame.FP()));
     return new Nx(MOVE(exp, init.unEx()));
   }
 
