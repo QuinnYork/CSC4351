@@ -155,12 +155,27 @@ public class Translate {
   }
 
   public Exp FieldVar(Exp record, int index) {
-    return new Ex(
-        MEM(
-            BINOP(
-                0,
-                record.unEx(),
-                CONST(index))));
+    Temp r = new Temp();
+    Label t = new Label("_BADPTR");
+    Label f = new Label();
+    return new Ex(ESEQ(
+      SEQ(
+        MOVE(
+          TEMP(r), 
+          record.unEx()), 
+        SEQ(
+          CJUMP(
+            0, 
+            TEMP(r), 
+            CONST(index), 
+            t, 
+            f), 
+          LABEL(f))), 
+      MEM(
+        BINOP(
+          0, 
+          TEMP(r), 
+          CONST(index)))));
   }
 
   public Exp SubscriptVar(Exp array, Exp index) {
@@ -262,6 +277,7 @@ public class Translate {
   public Exp OpExp(int op, Exp left, Exp right) {
     // need to chose BINOP or construction of a RelCx here
     // if <= 3 use BINOP
+    System.out.println("OPEXP: " + left.unEx() + " " + right.unEx());
     if (op <= 3)
       return new Ex(BINOP(op, left.unEx(), right.unEx()));
     else
@@ -337,11 +353,12 @@ public class Translate {
   }
 
   public Exp AssignExp(Exp lhs, Exp rhs) {
+    System.out.println("ASSIGNEXP: " + lhs.unEx() + " " + rhs.unEx());
     return new Nx(MOVE(lhs.unEx(), rhs.unEx()));
   }
 
   public Exp IfExp(Exp cc, Exp aa, Exp bb) {
-    return new Ex(new IfThenElseExp(cc, aa, bb).unEx());
+    return new IfThenElseExp(cc, aa, bb);
   }
 
   public Exp WhileExp(Exp test, Exp body, Label done) {
@@ -451,12 +468,15 @@ public class Translate {
   }
 
   public Exp LetExp(ExpList lets, Exp body) {
+    System.out.println(lets);
     if (lets == null)
       return null;
     Tree.Stm stm = lets.head.unNx(); // build this tree with each dec inside of lets
+    System.out.println(stm);
     lets = lets.tail;
     while (lets != null) {
       stm = SEQ(stm, lets.head.unNx());
+      System.out.println(stm);
       lets = lets.tail;
     }
     // stm holds Stm tree
@@ -469,6 +489,7 @@ public class Translate {
       }
       return new Ex(ESEQ(stm, exp));
     }
+    System.out.println((new Nx(stm)).unEx());
     return new Nx(stm);
   }
 

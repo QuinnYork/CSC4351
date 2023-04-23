@@ -34,7 +34,10 @@ class IfThenElseExp extends Exp {
   }
 
   Tree.Exp unEx() {
-    // You must implement this function
+    if (a == null || b == null)
+      return null;
+    else if (a instanceof Nx || b instanceof Nx)
+      return null;
     Temp r = new Temp();
     return new Tree.ESEQ(
       new Tree.SEQ(
@@ -60,6 +63,22 @@ class IfThenElseExp extends Exp {
   }
 
   Tree.Stm unNx() {
-    return new Tree.SEQ(unCx(join, join), new Tree.LABEL(join));
+    if (a == null || b == null)
+      return null;
+    return new Tree.SEQ(
+      new Tree.SEQ(
+        cond.unCx(t, f), 
+        new Tree.SEQ(
+          new Tree.SEQ(
+            new Tree.LABEL(t), 
+            new Tree.SEQ(
+              a.unNx(), 
+              new Tree.JUMP(join))), 
+          new Tree.SEQ(
+            new Tree.LABEL(f), 
+            new Tree.SEQ(
+              b.unNx(), 
+              new Tree.JUMP(join))))), 
+      new Tree.LABEL(join));
   }
 }
