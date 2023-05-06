@@ -30,24 +30,24 @@ class Main {
     debug.println("PROCEDURE " + f.frame.name);
     Assem.InstrList instrs = null;
     if (f.body != null) {
-      // debug.println("# Before canonicalization: ");
-      // print.prStm(f.body);
-      // debug.println("# After canonicalization: ");
+      debug.println("# Before canonicalization: ");
+      print.prStm(f.body);
+      debug.println("# After canonicalization: ");
       Tree.StmList stms = Canon.Canon.linearize(f.body);
-      // print.prStmList(stms);
-      // debug.println("# Basic Blocks: ");
+      print.prStmList(stms);
+      debug.println("# Basic Blocks: ");
       Canon.BasicBlocks b = new Canon.BasicBlocks(stms);
       for (Canon.StmListList l = b.blocks; l != null; l = l.tail) {
-        // debug.println("#");
-        // print.prStmList(l.head);
+        debug.println("#");
+        print.prStmList(l.head);
       }
       print.prStm(new Tree.LABEL(b.done));
-      // debug.println("# Trace Scheduled: ");
+      debug.println("# Trace Scheduled: ");
       Tree.StmList traced = (new Canon.TraceSchedule(b)).stms;
-      // print.prStmList(traced);
+      print.prStmList(traced);
       instrs = codegen(f.frame, traced);
     }
-    // debug.println("# Instructions: ");
+    debug.println("# Instructions: ");
     for (Assem.InstrList p = instrs; p != null; p = p.tail)
       debug.println(p.head.format(tempmap));
     debug.println("END " + f.frame.name);

@@ -31,3 +31,8 @@ For Project 4, we changed the Semant package to allocate locations for local var
 For Project 5, we generated Intermediate Code trees that represented what the source file is trying to do, machine independent. 
 
 Everything that the project needed implemented was implemented however, we ran into problems with certain expressions like arrays and records/subscripts. Keeping track of frame pointers and displaying the correct tree using access.exp() when looking at variable reference was also complicated and so there is a few errors there. Calls inside of a function are messed up but not to a great extent and somewhere in the code we are generating big trees that shouldn't be there in the first place. Most expressions worked completely fine but, when you add them all together and do certain arithmetic, logic, etc. they fail in some cases. BADSUB and BADPTR not correctly implemented, along with Arrays + Subscripts in general.
+
+# Project 6
+In Project 6, we were given basic blocks gained from canonicalized trees and we used these blocks to select certain Mips instructions based off what the tree was trying to do.
+
+For error/general correctness checking we generated a queens.s file that used the reference implementation and then another queens.s file that used our implementation. It's evident when comparing the two files that there are optimization problems when it came to our implementation, e.g., not a fully maximal munch of block tiles. Our algorithm for optimizing instruction selection is done somewhat well but, there are a couple of cases where the optimal instruction is not chosen. These were mainly the tiles that had a munch size >3, e.g., MOVE(MEM(BINOP(MEM(...)))). Overall though, most instructions are selected optimally.
